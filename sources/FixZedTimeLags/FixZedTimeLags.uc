@@ -69,12 +69,10 @@ var private KFGameType gameType;
 protected function OnEnabled()
 {
     gameType = KFGameType(level.game);
-    if (gameType == none)
-    {
+    if (gameType == none) {
         Destroy();
     }
-    else if (disableTick)
-    {
+    else if (disableTick) {
         gameType.Disable('Tick');
     }
 }
@@ -82,8 +80,7 @@ protected function OnEnabled()
 protected function OnDisabled()
 {
     gameType = KFGameType(level.game);
-    if (gameType != none && disableTick)
-    {
+    if (gameType != none && disableTick) {
         gameType.Enable('Tick');
     }
 }
@@ -93,11 +90,10 @@ event Tick(float delta)
     local float trueTimePassed;
     if (gameType == none)           return;
     if (!gameType.bZEDTimeActive)   return;
-    //      Unfortunately we need to keep disabling 'Tick' probe function,
+    //      Unfortunately we need to keep disabling `Tick()` probe function,
     //  because it constantly gets enabled back and I don't know where
     //  (maybe native code?); only really matters during zed time.
-    if (disableTick)
-    {
+    if (disableTick) {
         gameType.Disable('Tick');
     }
     //  How much real (not in-game) time has passed
@@ -105,8 +101,7 @@ event Tick(float delta)
     gameType.currentZEDTimeDuration -= trueTimePassed;
 
     //  Handle speeding up phase
-    if (gameType.bSpeedingBackUp)
-    {
+    if (gameType.bSpeedingBackUp) {
         DoSpeedBackUp(trueTimePassed);
     }
     else if (gameType.currentZEDTimeDuration < GetSpeedupDuration())
@@ -163,8 +158,7 @@ private final function DoSpeedBackUp(float trueTimePassed)
         updateCooldown -= trueTimePassed;
         return;
     }
-    else
-    {
+    else {
         updateCooldown = GetFullUpdateCooldown();
     }
     slowdownScale   = gameType.currentZEDTimeDuration / GetSpeedupDuration();

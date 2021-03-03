@@ -48,7 +48,7 @@ class FixInfiniteNades extends Feature
 //      Setting this flag to 'true' will allow to throw grenades by calling
 //  'ServerThrow' directly, as long as player has necessary ammo.
 //  This can allow some players to throw grenades much quicker than intended,
-//  therefore it's suggested to keep this flag set to 'false'.
+//  so if you wish to prevent it, keep this flag set to `false`.
 var private config const bool ignoreTossFlags;
 
 //  Records how much ammo given frag grenade ('Frag') has.
@@ -228,7 +228,7 @@ event Tick(float delta)
 
 defaultproperties
 {
-    ignoreTossFlags = false
+    ignoreTossFlags = true
     //  Listeners
     requiredListeners(0) = class'MutatorListener_FixInfiniteNades'
 }

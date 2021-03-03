@@ -95,8 +95,7 @@ protected function OnEnabled()
     local CashPickup nextCash;
     //      Find all wads of cash laying around on the map,
     //  so that we could accordingly limit the cash spam.
-    foreach level.DynamicActors(class'KFMod.CashPickup', nextCash)
-    {
+    foreach level.DynamicActors(class'KFMod.CashPickup', nextCash) {
         wads[wads.length] = nextCash;
     }
 }
@@ -119,8 +118,7 @@ public final function bool IsDoshStreamOverLimit()
     local int   i;
     local float overallContribution;
     overallContribution = 0.0;
-    for (i = 0; i < currentContributors.length; i += 1)
-    {
+    for (i = 0; i < currentContributors.length; i += 1) {
         overallContribution += currentContributors[i].contribution;
     }
     return (overallContribution > lastTickDuration * GetCurrentDPSLimit());
@@ -130,8 +128,7 @@ public final function bool IsDoshStreamOverLimit()
 private final function float GetCurrentDPSLimit()
 {
     local float speedScale;
-    if (doshPerSecondLimitMax < doshPerSecondLimitMin)
-    {
+    if (doshPerSecondLimitMax < doshPerSecondLimitMin) {
         return doshPerSecondLimitMax;
     }
     speedScale = Float(wads.length) / Float(criticalDoshAmount);
@@ -151,8 +148,7 @@ private final function int GetContributorIndex(PlayerController player)
 
     for (i = 0; i < currentContributors.length; i += 1)
     {
-        if (currentContributors[i].player == player)
-        {
+        if (currentContributors[i].player == player) {
             return i;
         }
     }
@@ -170,8 +166,7 @@ public final function AddContribution(PlayerController player, CashPickup cash)
     //  Check if given dosh was already accounted for.
     for (i = 0; i < wads.length; i += 1)
     {
-        if (cash == wads[i])
-        {
+        if (cash == wads[i]) {
             return;
         }
     }
@@ -194,8 +189,7 @@ private final function ReducePlayerContributions(float trueTimePassed)
     local float streamReduction;
     streamReduction = trueTimePassed *
         (GetCurrentDPSLimit() / currentContributors.length);
-    for (i = 0; i < currentContributors.length; i += 1)
-    {
+    for (i = 0; i < currentContributors.length; i += 1) {
         currentContributors[i].contribution -= streamReduction;
     }
 }
@@ -207,12 +201,10 @@ private final function CleanWadsArray()
     i = 0;
     while (i < wads.length)
     {
-        if (wads[i] == none)
-        {
+        if (wads[i] == none) {
             wads.Remove(i, 1);
         }
-        else
-        {
+        else {
             i += 1;
         }
     }

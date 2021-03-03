@@ -150,8 +150,7 @@ protected function OnEnabled()
 {
     local KFWeapon nextWeapon;
     //  Find all frags, that spawned when this fix wasn't running.
-    foreach level.DynamicActors(class'KFMod.KFWeapon', nextWeapon)
-    {
+    foreach level.DynamicActors(class'KFMod.KFWeapon', nextWeapon) {
         RegisterSinglePistol(nextWeapon, false);
     }
     level.game.AddGameModifier(Spawn(class'DualiesCostRule'));
@@ -192,8 +191,7 @@ public final function SetNextSellValue(int newValue)
 
 //  Finds a weapon of a given class in given 'Pawn' 's inventory.
 //  Returns 'none' if weapon isn't there.
-private final function KFWeapon GetWeaponOfClass
-(
+private final function KFWeapon GetWeaponOfClass(
     Pawn            playerPawn,
     class<KFWeapon> weaponClass
 )
@@ -204,8 +202,7 @@ private final function KFWeapon GetWeaponOfClass
     invIter = playerPawn.inventory;
     while (invIter != none)
     {
-        if (invIter.class == weaponClass)
-        {
+        if (invIter.class == weaponClass) {
             return KFWeapon(invIter);
         }
         invIter = invIter.inventory;
@@ -227,12 +224,10 @@ private final function int GetIndexAs(KFWeapon weapon, bool asSingle)
 
     for (i = 0; i < dualiesClasses.length; i += 1)
     {
-        if (asSingle && dualiesClasses[i].single == weapon.class)
-        {
+        if (asSingle && dualiesClasses[i].single == weapon.class) {
             return i;
         }
-        if (!asSingle && dualiesClasses[i].dual == weapon.class)
-        {
+        if (!asSingle && dualiesClasses[i].dual == weapon.class) {
             return i;
         }
     }
@@ -266,10 +261,9 @@ private final function float GetFullCost(KFWeapon weapon)
 
 //  If passed weapon is a pistol - we start tracking it's value;
 //  Otherwise - do nothing.
-public final function RegisterSinglePistol
-(
-    KFWeapon singlePistol,
-    bool justSpawned
+public final function RegisterSinglePistol(
+    KFWeapon    singlePistol,
+    bool        justSpawned
 )
 {
     local WeaponDataRecord newRecord;
@@ -384,8 +378,7 @@ public final function FixCostAfterPickUp(KFWeapon dualPistols)
                                     dualiesClasses[index].single);
     if (singlePistol != none)       return;
 
-    if (nextSellValue == -1)
-    {
+    if (nextSellValue == -1) {
         nextSellValue = GetFullCost(dualPistols) * 0.75;
     }
     for (i = 0; i < storedValues.length; i += 1)
@@ -409,8 +402,7 @@ public final function ApplyPendingValues()
         //      Our fixes can only increase the correct ('!= -1')
         //  sell value of weapons, so if we only need to change sell value
         //  if we're allowed to increase it or it's incorrect.
-        if (allowSellValueIncrease || pendingValues[i].weapon.sellValue == -1)
-        {
+        if (allowSellValueIncrease || pendingValues[i].weapon.sellValue == -1) {
             pendingValues[i].weapon.sellValue = pendingValues[i].value;
         }
     }

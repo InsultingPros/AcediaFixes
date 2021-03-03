@@ -70,8 +70,7 @@ private static function ReplacePickupWith(Pickup oldPickup)
 }
 
 //  TODO: this is code duplication, some sort of solution is needed
-static final function KFWeapon GetWeaponOfClass
-(
+static final function KFWeapon GetWeaponOfClass(
     Pawn                playerPawn,
     class<Inventory>    weaponClass
 )
@@ -82,8 +81,7 @@ static final function KFWeapon GetWeaponOfClass
     invIter = playerPawn.inventory;
     while (invIter != none)
     {
-        if (invIter.class == weaponClass)
-        {
+        if (invIter.class == weaponClass) {
             return KFWeapon(invIter);
         }
         invIter = invIter.inventory;

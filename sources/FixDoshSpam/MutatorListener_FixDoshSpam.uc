@@ -36,8 +36,7 @@ static function bool CheckReplacement(Actor other, out byte isSuperRelevant)
     //  the limit and the one trying to throw this cash contributed to it.
     //  We allow other players to throw at least one wad of cash.
     player = PlayerController(other.instigator.controller);
-    if (doshFix.IsDoshStreamOverLimit() && doshFix.IsContributor(player))
-    {
+    if (doshFix.IsDoshStreamOverLimit() && doshFix.IsContributor(player)) {
         return false;
     }
     //  If we do spawn cash - record this contribution.

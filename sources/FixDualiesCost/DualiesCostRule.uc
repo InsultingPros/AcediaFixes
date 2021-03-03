@@ -20,8 +20,7 @@
  */
 class DualiesCostRule extends GameRules;
 
-function bool OverridePickupQuery
-(
+function bool OverridePickupQuery(
 	Pawn other,
 	Pickup item,
 	out byte allowPickup

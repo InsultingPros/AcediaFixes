@@ -105,8 +105,7 @@ private final function int GetCooldownIndex(PlayerController player)
 
     for (i = 0; i < currentCooldowns.length; i += 1)
     {
-        if (currentCooldowns[i].player == player)
-        {
+        if (currentCooldowns[i].player == player) {
             return i;
         }
     }
@@ -122,8 +121,7 @@ public final function bool IsViolator(PlayerController player)
 
     for (i = 0; i < violators.length; i += 1)
     {
-        if (violators[i] == player)
-        {
+        if (violators[i] == player) {
             return true;
         }
     }
@@ -146,8 +144,7 @@ public final function NotifyStatusChange(PlayerController player)
         player.Destroy();
         currentCooldowns.Remove(index, 1);
         violators[violators.length] = player;
-        if (allowServerBlock)
-        {
+        if (allowServerBlock) {
             SetBlock(true);
         }
     }
@@ -201,8 +198,7 @@ private final function TryUnblocking()
 
     for (i = 0; i < violators.length; i += 1)
     {
-        if (violators[i] != none)
-        {
+        if (violators[i] != none) {
             return;
         }
     }
@@ -232,8 +228,7 @@ private final function int GetRealPlayers()
         player = connections[i].controllerReference;
         if (player == none)                         continue;
         if (player.playerReplicationInfo == none)   continue;
-        if (!player.playerReplicationInfo.bOnlySpectator)
-        {
+        if (!player.playerReplicationInfo.bOnlySpectator) {
             realPlayersAmount += 1;
         }
     }

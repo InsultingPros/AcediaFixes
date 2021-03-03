@@ -58,20 +58,17 @@ event Touch(Actor other)
     if (!wasActive && !target.IsInState('Pickup'))  return;
 
     ammoSellingFix = FixAmmoSelling(class'FixAmmoSelling'.static.GetInstance());
-    if (ammoSellingFix != none)
-    {
+    if (ammoSellingFix != none) {
         ammoSellingFix.RecordAmmoPickup(Pawn(other), target);
     }
 }
 
 event Tick(float delta)
 {
-    if (target != none)
-    {
+    if (target != none) {
         wasActive = target.IsInState('Pickup');
     }
-    else
-    {
+    else {
         Destroy();
     }
 }

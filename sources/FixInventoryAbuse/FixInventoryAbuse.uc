@@ -49,8 +49,7 @@ protected function OnEnabled()
 {
     local float actualInterval;
     actualInterval = checkInterval;
-    if (actualInterval <= 0)
-    {
+    if (actualInterval <= 0) {
         actualInterval = 0.25;
     }
     SetTimer(actualInterval, true);
@@ -124,8 +123,7 @@ private final function bool HasDuplicateGuns(KFHumanPawn playerPawn)
         if (nextWeapon == none)         continue;
         if (nextWeapon.bKFNeverThrow)   continue;
         rootClass = GetRootPickupClass(nextWeapon);
-        if (rootClass != none)
-        {
+        if (rootClass != none) {
             rootList[rootList.length] = rootClass;
         }
     }
@@ -134,8 +132,7 @@ private final function bool HasDuplicateGuns(KFHumanPawn playerPawn)
     {
         for (j = i + 1; j < rootList.length; j += 1)
         {
-            if (rootList[i] == rootList[j])
-            {
+            if (rootList[i] == rootList[j]) {
                 return true;
             }
         }
@@ -203,12 +200,10 @@ event Timer()
     for (i = 0; i < connections.length; i += 1)
     {
         nextPawn = none;
-        if (connections[i].controllerReference != none)
-        {
+        if (connections[i].controllerReference != none) {
             nextPawn = KFHumanPawn(connections[i].controllerReference.pawn);
         }
-        if (IsWeightLimitViolated(nextPawn) || HasDuplicateGuns(nextPawn))
-        {
+        if (IsWeightLimitViolated(nextPawn) || HasDuplicateGuns(nextPawn)) {
             DropEverything(nextPawn);
         }
     }

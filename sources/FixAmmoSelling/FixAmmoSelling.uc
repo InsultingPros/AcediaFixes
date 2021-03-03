@@ -139,13 +139,11 @@ protected function OnEnabled()
     local KFWeapon      nextWeapon;
     local KFAmmoPickup  nextPickup;
     //  Find all abusable weapons
-    foreach level.DynamicActors(class'KFMod.KFWeapon', nextWeapon)
-    {
+    foreach level.DynamicActors(class'KFMod.KFWeapon', nextWeapon) {
         FixWeapon(nextWeapon);
     }
     //  Start tracking all ammo boxes
-    foreach level.DynamicActors(class'KFMod.KFAmmoPickup', nextPickup)
-    {
+    foreach level.DynamicActors(class'KFMod.KFAmmoPickup', nextPickup) {
         class'AmmoPickupStalker'.static.StalkAmmoPickup(nextPickup);
     }
 }
@@ -167,14 +165,12 @@ protected function OnDisabled()
     registeredWeapons.length = 0;
     //  Kill all the stalkers;
     //  to be safe, avoid destroying them directly in the iterator.
-    foreach level.DynamicActors(class'AmmoPickupStalker', nextStalker)
-    {
+    foreach level.DynamicActors(class'AmmoPickupStalker', nextStalker) {
         stalkers[stalkers.length] = nextStalker;
     }
     for (i = 0; i < stalkers.length; i += 1)
     {
-        if (stalkers[i] != none)
-        {
+        if (stalkers[i] != none) {
             stalkers[i].Destroy();
         }
     }
@@ -187,8 +183,7 @@ public static final function bool IsReplacer(class<Actor> pickupClass)
     if (pickupClass == none) return false;
     for (i = 0; i < default.rules.length; i += 1)
     {
-        if (pickupClass == default.rules[i].pickupReplacement)
-        {
+        if (pickupClass == default.rules[i].pickupReplacement) {
             return true;
         }
     }
@@ -205,8 +200,7 @@ public final function FixWeapon(KFWeapon potentialAbuser)
 
     for (i = 0; i < registeredWeapons.length; i += 1)
     {
-        if (registeredWeapons[i].weapon == potentialAbuser)
-        {
+        if (registeredWeapons[i].weapon == potentialAbuser) {
             return;
         }
     }
@@ -234,8 +228,7 @@ private final function WeaponRecord FindAmmoInstance(WeaponRecord record)
     invIter = record.weapon.instigator.inventory;
     while (invIter != none)
     {
-        if (record.weapon.ammoClass[0] == invIter.class)
-        {
+        if (record.weapon.ammoClass[0] == invIter.class) {
             ammo = KFAmmunition(invIter);
         }
         invIter = invIter.inventory;
@@ -251,8 +244,7 @@ private final function WeaponRecord FindAmmoInstance(WeaponRecord record)
 
 //      Calculates how much more player should have paid for 'ammoAmount'
 //  amount of ammo, compared to how much trader took after our fix.
-private final function float GetPriceCorrection
-(
+private final function float GetPriceCorrection(
     KFWeapon kfWeapon,
     int ammoAmount
 )
@@ -319,8 +311,7 @@ private final function WeaponRecord TaxAmmoChange(WeaponRecord record)
         //  (actual price + our correction).
         //      But if user is extra concerned about it, -
         //  we can additionally for force the score above 0.
-        if (!allowNegativeDosh)
-        {
+        if (!allowNegativeDosh) {
             replicationInfo.score = FMax(0, replicationInfo.score);
         }
     }
@@ -368,8 +359,7 @@ event Tick(float delta)
             continue;
         }
         //  ...find ammo if it's missing
-        if (registeredWeapons[i].ammo == none)
-        {
+        if (registeredWeapons[i].ammo == none) {
             registeredWeapons[i] = FindAmmoInstance(registeredWeapons[i]);
         }
         //  ...tax for ammo, if we can

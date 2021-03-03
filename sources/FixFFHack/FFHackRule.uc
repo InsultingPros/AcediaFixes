@@ -20,8 +20,7 @@
  */
 class FFHackRule extends GameRules;
 
-function int NetDamage
-(
+function int NetDamage(
 	int 				originalDamage,
 	int 				damage,
 	Pawn 				injured,

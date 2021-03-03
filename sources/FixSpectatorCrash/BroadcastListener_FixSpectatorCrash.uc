@@ -24,8 +24,7 @@ class BroadcastListener_FixSpectatorCrash extends BroadcastListenerBase
 var private const int becomeAlivePlayerID;
 var private const int becomeSpectatorID;
 
-static function bool HandleLocalized
-(
+static function bool HandleLocalized(
     Actor                               sender,
     BroadcastEvents.LocalizedMessage    message
 )

@@ -97,14 +97,15 @@ public final function bool ShouldScaleDamage(class<DamageType> damageType)
     local array< class<DamageType> >    exceptions;
     if (damageType == none) return false;
 
-    if (scaleByDefault)
+    if (scaleByDefault) {
         exceptions = neverScale;
-    else
+    }
+    else {
         exceptions = alwaysScale;
+    }
     for (i = 0; i < exceptions.length; i += 1)
     {
-        if (exceptions[i] == damageType)
-        {
+        if (exceptions[i] == damageType) {
             return (!scaleByDefault);
         }
     }
