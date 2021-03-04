@@ -1,6 +1,6 @@
 /**
  *      Manifest for AcediaFixes package
- *      Copyright 2020 Anton Tarasenko
+ *      Copyright 2020 - 2021 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -30,4 +30,5 @@ defaultproperties
     features(5) = class'FixSpectatorCrash'
     features(6) = class'FixDualiesCost'
     features(7) = class'FixInventoryAbuse'
+    features(8) = class'FixProjectileFF'
 }
