@@ -29,7 +29,7 @@ static function bool CheckReplacement(Actor other, out byte isSuperRelevant)
     //  as they might not even exist on clients.
     if (class'FixAmmoSelling'.static.IsReplacer(other.class))
     {
-		ReplacePickupWith(Pickup(other));
+		ReplaceOldPickup(Pickup(other));
         return false;
     }
     CheckAbusableWeapon(KFWeapon(other));
@@ -49,7 +49,7 @@ private static function CheckAbusableWeapon(KFWeapon newWeapon)
 
 //      This function recreates the logic of 'KFWeapon.DropFrom()',
 //  since standard 'ReplaceWith' function produces bad results.
-private static function ReplacePickupWith(Pickup oldPickup)
+private static function ReplaceOldPickup(Pickup oldPickup)
 {
     local Pawn      instigator;
     local Pickup    newPickup;
