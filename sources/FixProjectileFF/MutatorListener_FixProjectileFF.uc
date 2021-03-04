@@ -61,14 +61,14 @@ static function ReplaceProjectileWith(
     //  new projectile.
     //      However `KFMod.HuskGun` is an exception that changes these values
     //  depending of the charge, so we need to either consider this as a
-    //  special case or just move valkues all the time - which is what we have
+    //  special case or just move values all the time - which is what we have
     //  chosen to do.
     newProjectile.damage        = oldProjectile.damage;
     oldProjectile.damage        = 0;
     newProjectile.damageRadius  = oldProjectile.damageRadius;
     oldProjectile.damageRadius  = 0;
     MoveImpactDamage(oldProjectile, newProjectile);
-    //  New projectile must govern all of the mechanics, so make the old mimick
+    //  New projectile must govern all of the mechanics, so make the old mimic
     //  former's movements as close as possible
     SetupOldProjectileAsFace(oldProjectile, newProjectile);
 }
@@ -90,9 +90,9 @@ static function SetupOldProjectileAsFace(
     //          `TakeDamage()` calls from friendly fire.
     oldProjectile.SetCollision(false, false);
     //  Prevent `oldProjectile` from dealing explosion damage in case something
-    //  still damages it
+    //  still damages and explodes it
     oldProjectile.bHurtEntry = true;
-    //  We can only make client-side projectile follow server-side one for
+    //  We can only make client-side projectile follow new server-side one for
     //  two projectile classes
     newProjectileAsOrca =
         FixProjectileFFClass_SPGrenadeProjectile(newProjectile);
@@ -108,7 +108,7 @@ static function SetupOldProjectileAsFace(
     }
 }
 
-//  `impactDamage` is sepratly defined in 4 different base classes of interest
+//  `impactDamage` is separately defined in 4 different base classes of interest
 //  and moving (or zeroing) it is cumbersome enough to warrant a separate method
 static function MoveImpactDamage(
     ROBallisticProjectile oldProjectile,

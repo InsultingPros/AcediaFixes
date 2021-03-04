@@ -46,7 +46,7 @@ class FixProjectileFF extends Feature
  *  enabled, it forces all the projectiles we are interested in to have
  *  `bGameRelevant = false`.
  *
- *      Issue arises from the fact that these two projectiles can desyncronize:
+ *      Issue arises from the fact that these two projectiles can desynchronize:
  *  old projectile, that client sees, might not be in the same location as the
  *  new one (especially since we are disabling collisions for the old one), that
  *  deals damage. There are two cases to consider, depending on
@@ -59,7 +59,7 @@ class FixProjectileFF extends Feature
  *          the ability to affect client's code, which cannot be done in
  *          the server mode.
  *      2. `bNetTemporary == true`: projectile version on client side is
- *          actually syncronized with the server-side's one. In this case we
+ *          actually synchronized with the server-side's one. In this case we
  *          will simply make new projectile to constantly force the old one to
  *          be in the same place at the same rotation. We will also propagate
  *          various state-changing events such as exploding, disintegrating from
@@ -76,9 +76,9 @@ class FixProjectileFF extends Feature
 var private config bool ignoreFriendlyFire;
 
 //  Stores what pairs of projectile classes that describe what (vulnerable)
-//  class must be repalced with what (protected class). It also remembers the
-//  previous state of `bGameRelevant` for replacable class to restore it in case
-//  this feature is disabled.
+//  class must be replaced with what (protected class). It also remembers the
+//  previous state of `bGameRelevant` for replaceable class to restore it in
+//  case this feature is disabled.
 struct ReplacementRule
 {
     //  `bGameRelevant` before this feature set it to `false`
