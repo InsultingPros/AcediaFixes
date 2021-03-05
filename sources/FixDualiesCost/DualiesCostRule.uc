@@ -1,6 +1,6 @@
 /**
  *      This rule detects any pickup events to allow us to
- *	properly record and/or fix pistols' prices.
+ *  properly record and/or fix pistols' prices.
  *      Copyright 2019 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
@@ -21,22 +21,22 @@
 class DualiesCostRule extends GameRules;
 
 function bool OverridePickupQuery(
-	Pawn other,
-	Pickup item,
-	out byte allowPickup
+    Pawn other,
+    Pickup item,
+    out byte allowPickup
 )
 {
-	local KFWeaponPickup weaponPickup;
-	local FixDualiesCost dualiesCostFix;
-	weaponPickup = KFWeaponPickup(item);
-	dualiesCostFix = FixDualiesCost(class'FixDualiesCost'.static.GetInstance());
-	if (weaponPickup != none && dualiesCostFix != none)
-	{
-		dualiesCostFix.ApplyPendingValues();
-		dualiesCostFix.StoreSinglePistolValues();
-		dualiesCostFix.SetNextSellValue(weaponPickup.sellValue);
-	}
-	return super.OverridePickupQuery(other, item, allowPickup);
+    local KFWeaponPickup weaponPickup;
+    local FixDualiesCost dualiesCostFix;
+    weaponPickup = KFWeaponPickup(item);
+    dualiesCostFix = FixDualiesCost(class'FixDualiesCost'.static.GetInstance());
+    if (weaponPickup != none && dualiesCostFix != none)
+    {
+        dualiesCostFix.ApplyPendingValues();
+        dualiesCostFix.StoreSinglePistolValues();
+        dualiesCostFix.SetNextSellValue(weaponPickup.sellValue);
+    }
+    return super.OverridePickupQuery(other, item, allowPickup);
 }
 
 defaultproperties

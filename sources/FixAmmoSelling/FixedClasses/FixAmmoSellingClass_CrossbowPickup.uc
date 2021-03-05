@@ -22,5 +22,5 @@ class FixAmmoSellingClass_CrossbowPickup extends CrossbowPickup;
 
 defaultproperties
 {
-	AmmoCost = 11.6
+    AmmoCost = 11.6
 }

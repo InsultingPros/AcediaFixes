@@ -46,18 +46,18 @@ public final static function PipesSafetyCollision ProtectPipes(
 //  particular fixes.
 private function bool IsSuspicious(Pawn instigator)
 {
-	//	Instigator vanished
-	if (instigator == none) return true;
+    //  Instigator vanished
+    if (instigator == none) return true;
 
-	//	Instigator already became spectator
-	if (KFPawn(instigator) != none)
-	{
-		if (instigator.playerReplicationInfo != none) {
-			return instigator.playerReplicationInfo.bOnlySpectator;
-		}
-		return true; // Replication info is gone => suspicious
-	}
-	return false;
+    //  Instigator already became spectator
+    if (KFPawn(instigator) != none)
+    {
+        if (instigator.playerReplicationInfo != none) {
+            return instigator.playerReplicationInfo.bOnlySpectator;
+        }
+        return true; // Replication info is gone => suspicious
+    }
+    return false;
 }
 
 //  Revert changes made by caller `PipesSafetyCollision`, letting corresponding

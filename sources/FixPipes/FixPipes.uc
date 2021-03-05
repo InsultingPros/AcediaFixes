@@ -316,7 +316,7 @@ private final function DoPipeProximityCheck(
     Vector          checkLocation)
 {
     local Pawn                  checkPawn;
-	local float                 threatLevel;
+    local float                 threatLevel;
     local PipeBombProjectile    pipe;
     pipe = pipeRecord.pipe;
     pipe.bAlwaysRelevant = false;

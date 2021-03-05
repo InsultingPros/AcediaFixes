@@ -29,7 +29,7 @@ static function bool CheckReplacement(Actor other, out byte isSuperRelevant)
     //  as they might not even exist on clients.
     if (class'FixAmmoSelling'.static.IsReplacer(other.class))
     {
-		ReplaceOldPickup(Pickup(other));
+        ReplaceOldPickup(Pickup(other));
         return false;
     }
     CheckAbusableWeapon(KFWeapon(other));
