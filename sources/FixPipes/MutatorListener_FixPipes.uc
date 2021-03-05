@@ -1,6 +1,6 @@
 /**
- *      Manifest for AcediaFixes package
- *      Copyright 2020 - 2021 Anton Tarasenko
+ *      Overloaded mutator events listener to register spawned pipe bombs.
+ *      Copyright 2021 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -17,19 +17,23 @@
  * You should have received a copy of the GNU General Public License
  * along with Acedia.  If not, see <https://www.gnu.org/licenses/>.
  */
- class Manifest extends _manifest
+class MutatorListener_FixPipes extends MutatorListenerBase
     abstract;
+
+static function bool CheckReplacement(Actor other, out byte isSuperRelevant)
+{
+    local FixPipes              pipesFix;
+    local PipeBombProjectile    pipeProjectile;
+    pipeProjectile = PipeBombProjectile(other);
+    if (pipeProjectile == none) return true;
+    pipesFix = FixPipes(class'FixPipes'.static.GetInstance());
+    if (pipesFix == none)       return true;
+
+    pipesFix.RegisterPipe(pipeProjectile);
+    return true;
+}
 
 defaultproperties
 {
-    features(0) = class'FixZedTimeLags'
-    features(1) = class'FixDoshSpam'
-    features(2) = class'FixFFHack'
-    features(3) = class'FixInfiniteNades'
-    features(4) = class'FixAmmoSelling'
-    features(5) = class'FixSpectatorCrash'
-    features(6) = class'FixDualiesCost'
-    features(7) = class'FixInventoryAbuse'
-    features(8) = class'FixProjectileFF'
-    features(9) = class'FixPipes'
+    relatedEvents = class'MutatorEvents'
 }
