@@ -414,7 +414,6 @@ defaultproperties
 {
     preventMassiveDamage            = true
     preventSuspiciousDamage         = true
-    onlyZedsAndPlayersCanDetonate   = true
     preventCorpseDetonation         = true
     preventNPCDetonation            = true
     proximityCheckElevation         = 20.0
