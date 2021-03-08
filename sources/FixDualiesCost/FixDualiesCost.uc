@@ -5,7 +5,7 @@
  *  selling pistols in a certain way.
  *
  *      It fixes all of the issues by manually setting pistols'
- *  'SellValue' variables to proper values.
+ *  `SellValue` variables to proper values.
  *      Fix only works with vanilla pistols, as it's unpredictable what
  *  custom ones can do and they can handle these issues on their own
  *  in a better way.
@@ -39,23 +39,23 @@ class FixDualiesCost extends Feature
  *      2. When player has dual pistols and drops one on the floor, -
  *  the sell value for the one left with the player isn't set.
  *      All weapons in Killing Floor get sell value assigned to them
- *  (appropriately, in a 'SellValue' variable). This is to ensure that the sell
+ *  (appropriately, in a `SellValue` variable). This is to ensure that the sell
  *  price is set the moment players buys the gun. Otherwise, due to ridiculous
  *  perked discounts, you'd be able to buy a pistol at 30% price
  *  as sharpshooter, but sell at 75% of a price as any other perk,
  *  resulting in 45% of pure profit.
- *      Unfortunately, that's exactly what happens when 'SellValue' isn't set
- *  (left as it's default value of '-1'): sell value of such weapons is
+ *      Unfortunately, that's exactly what happens when `SellValue` isn't set
+ *  (left as it's default value of `-1`): sell value of such weapons is
  *  determined only at the moment of sale and depends on the perk of the seller,
  *  allowing for possible exploits.
  *
  *      These issues are fixed by directly assigning
- *  proper values to 'SellValue'. To do that we need to detect when player
+ *  proper values to `SellValue`. To do that we need to detect when player
  *  buys/sells/drops/picks up weapons, which we accomplish by catching
- *  'CheckReplacement' event for weapon instances. This approach has two issues.
+ *  `CheckReplacement()` event for weapon instances. This approach has two issues.
  *      One is that, if vanilla's code sets an incorrect sell value, -
  *  it's doing it after weapon is spawned and, therefore,
- *  after 'CheckReplacement' call, so we have, instead, to remember to do
+ *  after `CheckReplacement()` call, so we have, instead, to remember to do
  *  it later, as early as possible
  *  (either the next tick or before another operation with weapons).
  *      Another issue is that when you have a pistol and pick up a pistol of
@@ -68,13 +68,13 @@ class FixDualiesCost extends Feature
  *  player can start touching them (which triggers a pickup) at the same time,
  *  picking them both in a single tick. This leaves us no room to record
  *  the value of a single pistol players picks up first.
- *  To get it we use game rules to catch 'OverridePickupQuery' event that's
+ *  To get it we use game rules to catch `OverridePickupQuery` event that's
  *  called before the first one gets destroyed,
  *  but after it's sell value was already set.
  *      Last issue is that when player picks up a second pistol - we don't know
  *  it's sell value and, therefore, can't calculate value of dual pistols.
  *  This is resolved by recording that value directly from a pickup,
- *  in abovementioned function 'OverridePickupQuery'.
+ *  in abovementioned function `OverridePickupQuery`.
  *      NOTE: 9mm is an exception due to the fact that you always have at least
  *  one and the last one can't be sold. We'll deal with it by setting
  *  the following rule: sell value of the un-droppable pistol is always 0
@@ -110,7 +110,7 @@ class FixDualiesCost extends Feature
 //      These people are, without a question, complete degenerates.
 //      But making mods for only non-mentally challenged isn't inclusive.
 //      So we add this option.
-//      Set it to 'false' if you only want to fix ammo printing
+//      Set it to `false` if you only want to fix ammo printing
 //  and leave the rest of the bullshit as-is.
 var private config const bool allowSellValueIncrease;
 
@@ -137,13 +137,13 @@ struct WeaponDataRecord
     var class<KFWeapon> class;
     var float           value;
     //      The whole point of this structure is to remember value of a weapon
-    //  after it's destroyed. Since 'reference' will become 'none' by then,
-    //  we will use the 'owner' reference to identify the weapon.
+    //  after it's destroyed. Since `reference` will become `none` by then,
+    //  we will use the `owner` reference to identify the weapon.
     var Pawn            owner;
 };
 var private const array<WeaponDataRecord> storedValues;
 
-//  Sell value of the last seen pickup in 'OverridePickupQuery'
+//  Sell value of the last seen pickup in `OverridePickupQuery`
 var private int nextSellValue;
 
 protected function OnEnabled()
@@ -189,8 +189,8 @@ public final function SetNextSellValue(int newValue)
     nextSellValue = newValue;
 }
 
-//  Finds a weapon of a given class in given 'Pawn' 's inventory.
-//  Returns 'none' if weapon isn't there.
+//  Finds a weapon of a given class in given `Pawn`'s inventory.
+//  Returns `none` if weapon isn't there.
 private final function KFWeapon GetWeaponOfClass(
     Pawn            playerPawn,
     class<KFWeapon> weaponClass
@@ -213,9 +213,9 @@ private final function KFWeapon GetWeaponOfClass(
 //      Gets weapon index in our record of dual pistol classes.
 //      Second variable determines whether we're searching for single
 //  or dual variant:
-//      ~ 'true'    - searching for single
-//      ~ 'false'   - for dual
-//      Returns '-1' if weapon isn't found
+//      ~ `true`    - searching for single
+//      ~ `false`   - for dual
+//      Returns `-1` if weapon isn't found
 //  (dual MK23 won't be found as a single weapon).
 private final function int GetIndexAs(KFWeapon weapon, bool asSingle)
 {
@@ -296,9 +296,9 @@ public final function FixCostAfterThrow(KFWeapon singlePistol)
                                     dualiesClasses[index].dual);
     if (dualPistols == none)    return;
 
-    //      Sell value recorded into 'dualPistols' will end up as a value of
+    //      Sell value recorded into `dualPistols` will end up as a value of
     //  a dropped pickup.
-    //      Sell value of 'singlePistol' will be the value for the pistol,
+    //      Sell value of `singlePistol` will be the value for the pistol,
     //  left in player's hands.
     if (dualPistols.class == class'KFMod.Single')
     {
@@ -328,8 +328,8 @@ public final function FixCostAfterBuying(KFWeapon dualPistols)
                                     dualiesClasses[index].single);
     if (singlePistol == none)   return;
 
-    //  'singlePistol' will get destroyed, so it's sell value is irrelevant.
-    //      'dualPistols' will be the new pair of pistols, but it's value will
+    //  `singlePistol` will get destroyed, so it's sell value is irrelevant.
+    //      `dualPistols` will be the new pair of pistols, but it's value will
     //  get overwritten by vanilla's code after this function.
     //  So we must add it to pending values to be changed later.
     newPendingValue.weapon  = dualPistols;
@@ -343,8 +343,8 @@ public final function FixCostAfterBuying(KFWeapon dualPistols)
     else
     {
         //      Otherwise price of a pair is the price of two pistols:
-        //  'singlePistol.sellValue'    - the one we had
-        //  '(FullCost / 2) * 0.75'     - and the one we bought
+        //  `singlePistol.sellValue`    - the one we had
+        //  `(FullCost / 2) * 0.75`     - and the one we bought
         newPendingValue.value = singlePistol.sellValue
             + (GetFullCost(dualPistols) / 2) * 0.75;
     }
@@ -364,12 +364,12 @@ public final function FixCostAfterPickUp(KFWeapon dualPistols)
     //      1. buying dualies, without having a single pistol of
     //      corresponding type;
     //      2. picking up a second pistol, while having another one;
-    //  by the time of 'CheckReplacement' (and, therefore, this function)
+    //  by the time of `CheckReplacement()` (and, therefore, this function)
     //  is called, there's no longer any single pistol in player's inventory
     //  (in first case it never was there, in second - it got destroyed).
     //      To distinguish between those possibilities we can check the owner of
     //  the spawned weapon, since it's only set to instigator at the time of
-    //  'CheckReplacement' when player picks up a weapon.
+    //  `CheckReplacement()` when player picks up a weapon.
     //      So we require that owner exists.
     if (dualPistols.owner == none)  return;
     index = GetIndexAs(dualPistols, false);
@@ -399,7 +399,7 @@ public final function ApplyPendingValues()
     for (i = 0; i < pendingValues.length; i += 1)
     {
         if (pendingValues[i].weapon == none)    continue;
-        //      Our fixes can only increase the correct ('!= -1')
+        //      Our fixes can only increase the correct (`!= -1`)
         //  sell value of weapons, so if we only need to change sell value
         //  if we're allowed to increase it or it's incorrect.
         if (allowSellValueIncrease || pendingValues[i].weapon.sellValue == -1) {

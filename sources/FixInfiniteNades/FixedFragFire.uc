@@ -1,7 +1,7 @@
  /**
- *      A replacement for vanilla 'FragFire' fire class for 'Frag' weapon that
+ *      A replacement for vanilla `FragFire` fire class for `Frag` weapon that
  *  adds additional ammo check in accordance to ammo records
- *  of 'FixInfiniteNades'.
+ *  of `FixInfiniteNades`.
  *      Copyright 2019 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.

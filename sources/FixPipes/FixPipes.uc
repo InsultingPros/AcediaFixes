@@ -243,6 +243,7 @@ private final function InterceptProximityChecks()
         if (IsPipeDoingProximityChecks(pipeRecords[i].pipe))
         {
             pipeRecords[i].pipe.SetTimer(0, false);
+            //  We set `1.0` because that is the vanilla value;
             //  Line 123 of "PipeBombProjectile.uc": `SetTimer(1.0,True);`
             pipeRecords[i].timerCountDown = 1.0;
             pipeRecords[i].proximityCheckIntercepted = true;
@@ -259,7 +260,7 @@ private final function bool IsPipeDoingProximityChecks(PipeBombProjectile pipe)
     if (pipe.bHidden)           return false;
     if (pipe.bTriggered)        return false;
     if (pipe.bEnemyDetected)    return false;
-    return (pipe.ArmingCountDown < 0);
+    return (pipe.armingCountDown < 0);
 }
 
 //  Checks what pipes have their timers run out and doing proximity checks

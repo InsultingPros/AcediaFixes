@@ -47,8 +47,8 @@ private static function CheckAbusableWeapon(KFWeapon newWeapon)
     ammoSellingFix.FixWeapon(newWeapon);
 }
 
-//      This function recreates the logic of 'KFWeapon.DropFrom()',
-//  since standard 'ReplaceWith' function produces bad results.
+//      This function recreates the logic of `KFWeapon.DropFrom()`,
+//  since standard `ReplaceWith()` method produces bad results.
 private static function ReplaceOldPickup(Pickup oldPickup)
 {
     local Pawn      instigator;

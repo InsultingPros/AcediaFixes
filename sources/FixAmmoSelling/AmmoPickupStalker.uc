@@ -24,9 +24,9 @@ class AmmoPickupStalker extends Actor;
 //  If it is destroyed (not just picked up) - stalker must die too.
 var private KFAmmoPickup target;
 
-//      This variable is used to record if our 'target' ammo box was in
-//  active state ('Pickup') last time we've checked.
-//  We need this because ammo box's 'Touch' event can fire off first and
+//      This variable is used to record if our `target` ammo box was in
+//  active state (`Pickup`) last time we've checked.
+//  We need this because ammo box's `Touch()` event can fire off first and
 //  force the box to sleep before stalker could catch same event.
 //  Without this variable we would have no way to know if player
 //  simply walked near the place of a sleeping box or actually grabbed it.

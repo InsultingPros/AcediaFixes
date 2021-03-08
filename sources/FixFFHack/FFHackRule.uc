@@ -1,6 +1,6 @@
 /**
  *      This rule detects suspicious attempts to deal damage and
- *    applies friendly fire scaling according to 'FixFFHack's rules.
+ *    applies friendly fire scaling according to `FixFFHack`'s rules.
  *      Copyright 2019 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.

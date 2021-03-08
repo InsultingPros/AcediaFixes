@@ -1,6 +1,6 @@
 /**
  *      Overloaded mutator events listener to catch
- *  new 'Frag' weapons and 'Nade' projectiles.
+ *  new `Frag` weapons and `Nade` projectiles.
  *      Copyright 2019 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.

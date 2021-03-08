@@ -1,5 +1,5 @@
  /**
- *      This feature fixes a vulnerability in a code of 'Frag' that can allow
+ *      This feature fixes a vulnerability in a code of `Frag` that can allow
  *  player to throw grenades even when he no longer has any.
  *  There's also no cooldowns on the throw, which can lead to a server crash.
  *      Copyright 2019 Anton Tarasenko
@@ -23,7 +23,7 @@ class FixInfiniteNades extends Feature
     config(AcediaFixes);
 
 /**
- *      It is possible to call 'ServerThrow' function from client,
+ *      It is possible to call `ServerThrow` function from client,
  *  forcing it to get executed on a server. This function consumes the grenade
  *  ammo and spawns a nade, but it doesn't check if player had any grenade ammo
  *  in the first place, allowing you him to throw however many grenades
@@ -31,7 +31,7 @@ class FixInfiniteNades extends Feature
  *  allows to spawn many grenades without any delay,
  *  which can lead to a server crash.
  *
- *      This fix tracks every instance of 'Frag' weapon that's responsible for
+ *      This fix tracks every instance of `Frag` weapon that's responsible for
  *  throwing grenades and records how much ammo they have have.
  *  This is necessary, because whatever means we use, when we get a say in
  *  preventing grenade from spawning the ammo was already reduced.
@@ -40,18 +40,18 @@ class FixInfiniteNades extends Feature
  *  his last nade, as in both cases current ammo visible to us will be 0.
  *  Then, before every nade throw, it checks if player has enough ammo and
  *  blocks grenade from spawning if he doesn't.
- *      We change a 'FireModeClass[0]' from 'FragFire' to 'FixedFragFire' and
- *  only call 'super.DoFireEffect()' if we decide spawning grenade
- *  should be allowed. The side effect is a change in server's 'FireModeClass'.
+ *      We change a `FireModeClass[0]` from `FragFire` to `FixedFragFire` and
+ *  only call `super.DoFireEffect()` if we decide spawning grenade
+ *  should be allowed. The side effect is a change in server's `FireModeClass`.
  */
 
-//      Setting this flag to 'true' will allow to throw grenades by calling
-//  'ServerThrow' directly, as long as player has necessary ammo.
+//      Setting this flag to `true` will allow to throw grenades by calling
+//  `ServerThrow()` directly, as long as player has necessary ammo.
 //  This can allow some players to throw grenades much quicker than intended,
 //  so if you wish to prevent it, keep this flag set to `false`.
 var private config const bool ignoreTossFlags;
 
-//  Records how much ammo given frag grenade ('Frag') has.
+//  Records how much ammo given frag grenade (`Frag`) has.
 struct FragAmmoRecord
 {
     var public Frag fragReference;
@@ -77,8 +77,8 @@ protected function OnDisabled()
 }
 
 //  Returns index of the connection corresponding to the given controller.
-//  Returns '-1' if no connection correspond to the given controller.
-//  Returns '-1' if given controller is equal to 'none'.
+//  Returns `-1` if no connection correspond to the given controller.
+//  Returns `-1` if given controller is equal to `none`.
 private final function int GetAmmoIndex(Frag fragToCheck)
 {
     local int i;
@@ -94,7 +94,7 @@ private final function int GetAmmoIndex(Frag fragToCheck)
     return -1;
 }
 
-//  Recreates all the 'Frag' actors, to change their fire mode mid-game.
+//  Recreates all the `Frag` actors, to change their fire mode mid-game.
 private final function RecreateFrags()
 {
     local int                   i;
@@ -105,7 +105,7 @@ private final function RecreateFrags()
     oldRecords = ammoRecords;
     for (i = 0; i < oldRecords.length; i += 1)
     {
-        //  Check if we even need to recreate that instance of 'Frag'
+        //  Check if we even need to recreate that instance of `Frag`
         if (oldRecords[i].fragReference == none) continue;
         fragOwner = oldRecords[i].fragReference.instigator;
         if (fragOwner == none) continue;
@@ -122,7 +122,7 @@ private final function RecreateFrags()
     }
 }
 
-// Utility function to help find a 'Frag' instance in a given pawn's inventory.
+// Utility function to help find a `Frag` instance in a given pawn's inventory.
 static private final function Frag GetPawnFrag(Pawn pawnWithFrag)
 {
     local Frag      foundFrag;
@@ -152,7 +152,7 @@ private final function int GetFragAmmo(Frag fragReference)
     return Int(currentAmmo);
 }
 
-//  Attempts to add new 'Frag' instance to our records.
+//  Attempts to add new `Frag` instance to our records.
 public final function RegisterFrag(Frag newFrag)
 {
     local int               index;
@@ -166,8 +166,8 @@ public final function RegisterFrag(Frag newFrag)
 }
 
 //      This function tells our fix that there was a nade throw and we should
-//  reduce current 'Frag' ammo in our records.
-//  Returns 'true' if we had ammo for that, and 'false' if we didn't.
+//  reduce current `Frag` ammo in our records.
+//  Returns `true` if we had ammo for that, and `false` if we didn't.
 public final function bool RegisterNadeThrow(Frag relevantFrag)
 {
     if (CanThrowGrenade(relevantFrag))
@@ -181,8 +181,8 @@ public final function bool RegisterNadeThrow(Frag relevantFrag)
 //      Can we throw grenade according to our rules?
 //  A throw can be prevented if:
 //  - we think that player doesn't have necessary ammo;
-//  - Player isn't currently 'tossing' a nade,
-//  meaning it was a direct call of 'ServerThrow'.
+//  - Player isn't currently `tossing` a nade,
+//  meaning it was a direct call of `ServerThrow`.
 private final function bool CanThrowGrenade(Frag fragToCheck)
 {
     local int index;

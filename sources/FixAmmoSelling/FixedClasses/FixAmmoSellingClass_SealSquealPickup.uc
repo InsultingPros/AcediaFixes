@@ -1,5 +1,5 @@
 /**
- *      A helper class for 'FixAmmoSelling' that sets ammo cost for harpoon
+ *      A helper class for `FixAmmoSelling` that sets ammo cost for harpoon
  *  to that of a level 6 player and doesn't allow for a perk discount.
  *      Copyright 2019 Anton Tarasenko
  *------------------------------------------------------------------------------

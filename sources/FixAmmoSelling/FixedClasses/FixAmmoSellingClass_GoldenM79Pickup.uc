@@ -1,5 +1,5 @@
 /**
- *      A helper class for 'FixAmmoSelling' that sets ammo cost for m79 to that
+ *      A helper class for `FixAmmoSelling` that sets ammo cost for m79 to that
  *  of a level 6 player and doesn't allow for a perk discount.
  *      Copyright 2019 Anton Tarasenko
  *------------------------------------------------------------------------------

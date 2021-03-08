@@ -30,12 +30,12 @@ class FixDoshSpam extends Feature
 
 /**
  *      First, we limit amount of dosh that can be spawned simultaneously.
- *  The simplest method is to place a cooldown on spawning 'CashPickup' actors,
- *  i.e. after spawning one 'CashPickup' we'd completely prevent spawning
+ *  The simplest method is to place a cooldown on spawning `CashPickup` actors,
+ *  i.e. after spawning one `CashPickup` we'd completely prevent spawning
  *  any other instances of it for a fixed amount of time.
  *  However, that might allow a malicious spammer to block others from
  *  throwing dosh, - all he needs to do is to spam dosh at right time intervals.
- *      We'll resolve this issue by recording how many 'CashPickup' actors
+ *      We'll resolve this issue by recording how many `CashPickup` actors
  *  each player has spawned as their "contribution" and decay
  *  that value with time, only allowing to spawn new dosh after
  *  contribution decayed to zero. Speed of decay is derived from current dosh
@@ -66,8 +66,8 @@ class FixDoshSpam extends Feature
 var private config const float doshPerSecondLimitMax;
 var private config const float doshPerSecondLimitMin;
 //      Amount of dosh pickups on the map at which we must set dosh per second
-//  to 'doshPerSecondLimitMin'.
-//  We use 'doshPerSecondLimitMax' when there's no dosh on the map and
+//  to `doshPerSecondLimitMin`.
+//  We use `doshPerSecondLimitMax` when there's no dosh on the map and
 //  scale linearly between them as it's amount grows.
 var private config const int criticalDoshAmount;
 
@@ -139,8 +139,8 @@ private final function float GetCurrentDPSLimit()
 }
 
 //  Returns index of the contributor corresponding to the given controller.
-//  Returns '-1' if no connection correspond to the given controller.
-//  Returns '-1' if given controller is equal to 'none'.
+//  Returns `-1` if no connection correspond to the given controller.
+//  Returns `-1` if given controller is equal to `none`.
 private final function int GetContributorIndex(PlayerController player)
 {
     local int i;

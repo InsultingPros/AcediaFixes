@@ -8,11 +8,11 @@
  *  notably pipe bombs (74% discount for lvl6 demolition)
  *  and crossbow (42% discount for lvl6 sharpshooter).
  *
- *      This feature fixes this problem by setting 'pickupClass' variable in
+ *      This feature fixes this problem by setting `pickupClass` variable in
  *  potentially abusable weapons to our own value that won't receive a discount.
  *  Luckily for us, it seems that pickup spawn and discount checks are the only
  *  two place where variable is directly checked in a vanilla game's code
- *  ('default.pickupClass' is used everywhere else),
+ *  (`default.pickupClass` is used everywhere else),
  *  so we can easily deal with the side effects of such change.
  *      Copyright 2020 Anton Tarasenko
  *------------------------------------------------------------------------------
@@ -35,23 +35,23 @@ class FixAmmoSelling extends Feature
     config(AcediaFixes);
 
 /**
- *      We will replace 'pickupClass' variable for all instances of potentially
+ *      We will replace `pickupClass` variable for all instances of potentially
  *  abusable weapons. That is weapons, that have a discount for their ammunition
- *  (via 'GetAmmoCostScaling' function in a corresponding perk class).
- *  They are defined (along with our pickup replacements) in 'rules' array.
+ *  (via `GetAmmoCostScaling()` function in a corresponding perk class).
+ *  They are defined (along with our pickup replacements) in `rules` array.
  *  That array isn't configurable, since the abusable status is hardcoded into
  *  perk classes and the main mod that allows to change those (ServerPerks),
  *  also solves ammo selling by a more direct method
  *  (only available for the mods that replace player pawn class).
  *  This change already completely fixes ammo printing.
- *      Possible concern with changing the value of 'pickupClass' is that
+ *      Possible concern with changing the value of `pickupClass` is that
  *  it might affect gameplay in too many ways.
  *  But, luckily for us, that value is only used when spawning a new pickup and
- *  in 'ServerBuyAmmo' function of 'KFPawn'
+ *  in `ServerBuyAmmo` function of `KFPawn`
  *  (all the other places use it's default value instead).
  *  This means that the only two side-effects of our change are:
  *      1. That wrong pickup class will be spawned. This problem is easily
- *          solved by replacing spawned actor in 'CheckReplacement'.
+ *          solved by replacing spawned actor in `CheckReplacement()`.
  *      2. That ammo will be sold at a different (lower for us) price,
  *          while trader would still display and require the original price.
  *          This problem is solved by manually taking from player the difference
@@ -74,15 +74,15 @@ class FixAmmoSelling extends Feature
  *  First, all cases of ammo boxes outside the trader are easy to detect,
  *  since in this case we can be sure that player didn't buy ammo
  *  (and mods that can allow it can just get rid of
- *  'ServerSellAmmo' function directly, similarly to how ServerPerks does it).
+ *  `ServerSellAmmo()` function directly, similarly to how ServerPerks does it).
  *  We'll detect all the other boxes by attaching an auxiliary actor
- *  ('AmmoPickupStalker') to them, that will fire off 'Touch' event
+ *  (`AmmoPickupStalker`) to them, that will fire off `Touch()` event
  *  at the same time as ammo boxes.
  *      The only possible problem is that part of the ammo cost is
  *  taken with a slight delay, which leaves cheaters a window of opportunity
  *  to buy more than they can afford.
  *  This issue is addressed by each ammo type costing as little as possible
- *  (its' cost for corresponding perk at lvl6)
+ *  (it's cost for corresponding perk at lvl6)
  *  and a flag that does allow players to go into negative dosh values
  *  (the cost is potential bugs in this fix itself, that
  *  can somewhat affect regular players).
@@ -94,10 +94,10 @@ class FixAmmoSelling extends Feature
 //      The problem is, due to how ammo purchase is coded, low-level (<6 lvl)
 //  players can actually buy more ammo for "fixed" weapons than they can afford
 //  by filling ammo for one or all weapons.
-//      Setting this flag to 'true' will allow us to still take full cost
+//      Setting this flag to `true` will allow us to still take full cost
 //  from them, putting them in "debt" (having negative dosh amount).
 //  If you don't want to have players with negative dosh values on your server
-//  as a side-effect of this fix, then leave this flag as 'false',
+//  as a side-effect of this fix, then leave this flag as `false`,
 //  letting low level players buy ammo cheaper
 //  (but not cheaper than lvl6 could).
 //      NOTE: this issue doesn't affect level 6 players.
@@ -153,7 +153,7 @@ protected function OnDisabled()
     local int                       i;
     local AmmoPickupStalker         nextStalker;
     local array<AmmoPickupStalker>  stalkers;
-    //  Restore all the 'pickupClass' variables we've changed.
+    //  Restore all the `pickupClass` variables we've changed.
     for (i = 0; i < registeredWeapons.length; i += 1)
     {
         if (registeredWeapons[i].weapon != none)
@@ -242,7 +242,7 @@ private final function WeaponRecord FindAmmoInstance(WeaponRecord record)
     return record;
 }
 
-//      Calculates how much more player should have paid for 'ammoAmount'
+//      Calculates how much more player should have paid for `ammoAmount`
 //  amount of ammo, compared to how much trader took after our fix.
 private final function float GetPriceCorrection(
     KFWeapon kfWeapon,
@@ -250,9 +250,9 @@ private final function float GetPriceCorrection(
 )
 {
     local float                     boughtMagFraction;
-    //      'vanillaPrice' - price that would be calculated
+    //      `vanillaPrice` - price that would be calculated
     //  without our interference
-    //      'fixPrice' - price that will be calculated after
+    //      `fixPrice` - price that will be calculated after
     //  we've replaced pickup class
     local float                     vanillaPrice, fixPrice;
     local KFPlayerReplicationInfo   kfRI;
@@ -282,9 +282,9 @@ private final function float GetPriceCorrection(
     return float(Max(0, int(vanillaPrice) - int(fixPrice)));
 }
 
-//      Takes current ammo and last recorded in 'record' value to calculate
+//      Takes current ammo and last recorded in `record` value to calculate
 //  how much money to take from the player
-//  (calculations are done via 'GetPriceCorrection').
+//  (calculations are done via `GetPriceCorrection()`).
 private final function WeaponRecord TaxAmmoChange(WeaponRecord record)
 {
     local int                   ammoDiff;
@@ -324,7 +324,7 @@ public final function RecordAmmoPickup(Pawn pawnWithAmmo, KFAmmoPickup pickup)
 {
     local int i;
     local int newAmount;
-    //  Check conditions from 'KFAmmoPickup' code ('Touch' function)
+    //  Check conditions from `KFAmmoPickup` code (`Touch()` method)
     if (pickup == none)                                     return;
     if (pawnWithAmmo == none)                               return;
     if (pawnWithAmmo.controller == none)                    return;

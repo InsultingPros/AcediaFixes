@@ -105,8 +105,8 @@ private final function class<KFWeaponPickup> GetRootPickupClass(KFWeapon weapon)
     return root;
 }
 
-//      Returns 'true' if passed pawn has two weapons that are just variants of
-//  each other (they have the same root, see 'GetRootPickupClass').
+//      Returns `true` if passed pawn has two weapons that are just variants of
+//  each other (they have the same root, see `GetRootPickupClass()`).
 private final function bool HasDuplicateGuns(KFHumanPawn playerPawn)
 {
     local int                       i, j;
@@ -150,11 +150,11 @@ private final function Vector DropWeapon(KFWeapon weaponToDrop)
     playerPawn = KFHumanPawn(weaponToDrop.instigator);
     if (playerPawn == none)     return Vect(0, 0, 0);
 
-    //  Calculations from 'PlayerController.ServerThrowWeapon'
+    //  Calculations from `PlayerController.ServerThrowWeapon()`
     weaponVelocity = Vector(playerPawn.GetViewRotation());
     weaponVelocity *= (playerPawn.velocity dot weaponVelocity) + 150;
     weaponVelocity += Vect(0, 0, 100);
-    //  Calculations from 'Pawn.TossWeapon'
+    //  Calculations from `Pawn.TossWeapon()`
     GetAxes(playerPawn.rotation, x, y, z);
     dropLocation = playerPawn.location + 0.8 * playerPawn.collisionRadius * x -
         0.5 * playerPawn.collisionRadius * y;

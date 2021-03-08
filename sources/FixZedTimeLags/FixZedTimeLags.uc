@@ -2,9 +2,9 @@
  *      This feature fixes lags caused by a zed time that can occur
  *  on some maps when a lot of zeds are present at once.
  *      As a side effect it also fixes an issue where during zed time speed up
- *  'zedTimeSlomoScale' was assumed to be default value of '0.2'.
+ *  `zedTimeSlomoScale` was assumed to be default value of `0.2`.
  *  Now zed time will behave correctly with mods that
- *  change 'zedTimeSlomoScale'.
+ *  change `zedTimeSlomoScale`.
  *      Copyright 2020 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
@@ -28,20 +28,20 @@ class FixZedTimeLags extends Feature
 
 /**
  *      When zed time activates, game speed is immediately set to
- *  'zedTimeSlomoScale' (0.2 by default), defined, like all other variables,
- *  in 'KFGameType'. Zed time lasts 'zedTimeDuration' seconds (3.0 by default),
- *  but during last 'zedTimeDuration * 0.166' seconds (by default 0.498)
+ *  `zedTimeSlomoScale` (0.2 by default), defined, like all other variables,
+ *  in `KFGameType`. Zed time lasts `zedTimeDuration` seconds (3.0 by default),
+ *  but during last `zedTimeDuration * 0.166` seconds (by default 0.498)
  *  it starts to speed back up, causing game speed to update every tick.
  *      This makes animations look more smooth when exiting zed-time;
  *  however, updating speed every tick for that purpose seems like
  *  an overkill and, combined with things like
  *  increased tick rate, certain maps and raised zed limit,
  *  it can lead to noticeable lags at the end of zed time.
- *      To fix this issue we disable 'Tick' event in
- *  'KFGameType' and then repeat that functionality in our own 'Tick' event,
+ *      To fix this issue we disable `Tick()` event in
+ *  `KFGameType` and then repeat that functionality in our own `Tick()` event,
  *  but only perform game speed updates occasionally,
  *  to make sure that overall amount of updates won't go over a limit,
- *  that can be configured via 'maxGameSpeedUpdatesAmount'
+ *  that can be configured via `maxGameSpeedUpdatesAmount`
  *      Author's test (looking really hard on clots' animations)
  *  seem to suggest that there shouldn't be much visible difference if
  *  we limit game speed updates to about 2 or 3.
@@ -54,12 +54,12 @@ class FixZedTimeLags extends Feature
 //      Values lower than 1 are treated like 1.
 var private config const int maxGameSpeedUpdatesAmount;
 //      [ADVANCED] Don't change this setting unless you know what you're doing.
-//      Compatibility setting that allows to keep 'GameInfo' 's 'Tick' event
+//      Compatibility setting that allows to keep `GameInfo`'s `Tick()` event
 //  from being disabled.
-//  Useful when running Acedia along with custom 'GameInfo'
-//  (that isn't 'KFGameType') that relies on 'Tick' event.
+//  Useful when running Acedia along with custom `GameInfo`
+//  (that isn't `KFGameType`) that relies on `Tick()` event.
 //      Note, however, that in order to keep this fix working properly,
-//  it's on you to make sure 'KFGameType.Tick()' logic isn't executed.
+//  it's on you to make sure `KFGameType.Tick()` logic isn't executed.
 var private config const bool disableTick;
 //  Counts how much time is left until next update
 var private float updateCooldown;
@@ -145,7 +145,7 @@ private final function TellClientsZedTimeEnds()
 //  gradual game speed increase.
 private final function DoSpeedBackUp(float trueTimePassed)
 {
-    //      Game speed will always be updated in our 'Tick' event
+    //      Game speed will always be updated in our `Tick()` event
     //  at the very end of the zed time.
     //      The rest of the updates will be uniformly distributed
     //  over the speed up duration.

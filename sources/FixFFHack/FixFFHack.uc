@@ -35,12 +35,12 @@ class FixFFHack extends Feature
  *      To specify required subset of weapons, one must first
  *  chose a general rule (scale by default / don't scale by default) and then,
  *  optionally, add exceptions to it.
- *      Choosing 'scaleByDefault == true' as a general rule will make this fix
- *  behave in the similar way to 'KFExplosiveFix' by mutant and will disable
+ *      Choosing `scaleByDefault == true` as a general rule will make this fix
+ *  behave in the similar way to `KFExplosiveFix` by mutant and will disable
  *  some environmental sources of damage on some maps. One can then add relevant
  *  damage classes as exceptions to fix that downside, but making an extensive
  *  list of such sources might prove problematic.
- *      On the other hand, setting 'scaleByDefault == false' will allow to get
+ *      On the other hand, setting `scaleByDefault == false` will allow to get
  *  rid of team-killing exploits by simply adding damage types of all
  *  projectile weapons, used on a server. This fix comes with such filled-in
  *  list of all vanilla projectile classes.
@@ -48,9 +48,10 @@ class FixFFHack extends Feature
 
 //      Defines a general rule for choosing whether or not to apply
 //  friendly fire scaling.
-//  This can be overwritten by exceptions ('alwaysScale' or 'neverScale').
-//  Enabling scaling by default without any exceptions in 'neverScale' will
-//  make this fix behave almost identically to Mutant's 'Explosives Fix Mutator'.
+//  This can be overwritten by exceptions (`alwaysScale` or `neverScale`).
+//  Enabling scaling by default without any exceptions in `neverScale` will
+//  make this fix behave almost identically to Mutant's
+//  'Explosives Fix Mutator'.
 var private config const bool                       scaleByDefault;
 //  Damage types, for which we should always reapply friendly fire scaling.
 var private config const array< class<DamageType> > alwaysScale;

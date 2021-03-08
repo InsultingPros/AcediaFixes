@@ -26,7 +26,7 @@ static function bool CheckReplacement(Actor other, out byte isSuperRelevant)
     local FixDoshSpam       doshFix;
     local PlayerController  player;
     if (other.class != class'CashPickup')   return true;
-    //      This means this dosh wasn't spawned in 'TossCash' of 'KFPawn',
+    //      This means this dosh wasn't spawned in `TossCash()` of `KFPawn`,
     //  so it isn't related to the exploit we're trying to fix.
     if (other.instigator == none)           return true;
     doshFix = FixDoshSpam(class'FixDoshSpam'.static.GetInstance());
