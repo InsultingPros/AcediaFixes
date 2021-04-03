@@ -6,7 +6,7 @@
  *  In order to avoid that, this fix allows server owner to define precisely
  *  to what damage types to apply the friendly fire scaling.
  *  It should be all damage types related to projectiles.
- *      Copyright 2019 Anton Tarasenko
+ *      Copyright 2019 - 2021 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -60,35 +60,12 @@ var private config const array< class<DamageType> > neverScale;
 
 protected function OnEnabled()
 {
-    level.game.AddGameModifier(Spawn(class'FFHackRule'));
+    _.unreal.AddGameRules(class'FFHackRule');
 }
 
 protected function OnDisabled()
 {
-    local GameRules     rulesIter;
-    local FFHackRule    ruleToDestroy;
-    //  Check first rule
-    if (level.game.gameRulesModifiers == none) return;
-
-    ruleToDestroy = FFHackRule(level.game.gameRulesModifiers);
-    if (ruleToDestroy != none)
-    {
-        level.game.gameRulesModifiers = ruleToDestroy.nextGameRules;
-        ruleToDestroy.Destroy();
-        return;
-    }
-    //  Check rest of the rules
-    rulesIter = level.game.gameRulesModifiers;
-    while (rulesIter != none)
-    {
-        ruleToDestroy = FFHackRule(rulesIter.nextGameRules);
-        if (ruleToDestroy != none)
-        {
-            rulesIter.nextGameRules = ruleToDestroy.nextGameRules;
-            ruleToDestroy.Destroy();
-        }
-        rulesIter = rulesIter.nextGameRules;
-    }
+    _.unreal.RemoveGameRules(class'FFHackRule');
 }
 
 //  Checks general rule and exception list
