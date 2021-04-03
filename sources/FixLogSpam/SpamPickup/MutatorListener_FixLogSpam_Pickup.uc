@@ -1,6 +1,7 @@
 /**
- *      Manifest for AcediaFixes package
- *      Copyright 2020 - 2021 Anton Tarasenko
+ *      Overloaded mutator events listener to catch and, possibly,
+ *  prevent spawning `KFWeaponPickup` for fixing log spam related to them.
+ *      Copyright 2021 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -17,20 +18,23 @@
  * You should have received a copy of the GNU General Public License
  * along with Acedia.  If not, see <https://www.gnu.org/licenses/>.
  */
- class Manifest extends _manifest
+class MutatorListener_FixLogSpam_Pickup extends MutatorListenerBase
     abstract;
+
+static function bool CheckReplacement(Actor other, out byte isSuperRelevant)
+{
+    local HelperPickup      helper;
+    local KFWeaponPickup    otherPickup;
+    otherPickup = KFWeaponPickup(other);
+    if (otherPickup == none)    return true;
+    helper = class'HelperPickup'.static.GetInstance();
+    if (helper == none)         return true;
+
+    helper.HandlePickup(otherPickup);
+    return true;
+}
 
 defaultproperties
 {
-    features(0)     = class'FixZedTimeLags'
-    features(1)     = class'FixDoshSpam'
-    features(2)     = class'FixFFHack'
-    features(3)     = class'FixInfiniteNades'
-    features(4)     = class'FixAmmoSelling'
-    features(5)     = class'FixSpectatorCrash'
-    features(6)     = class'FixDualiesCost'
-    features(7)     = class'FixInventoryAbuse'
-    features(8)     = class'FixProjectileFF'
-    features(9)     = class'FixPipes'
-    features(10)    = class'FixLogSpam'
+    relatedEvents = class'MutatorEvents'
 }

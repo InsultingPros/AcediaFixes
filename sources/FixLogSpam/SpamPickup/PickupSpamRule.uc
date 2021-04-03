@@ -1,6 +1,7 @@
 /**
- *      Manifest for AcediaFixes package
- *      Copyright 2020 - 2021 Anton Tarasenko
+ *      This rule detects when someone is trying to... pick up a pickup and
+ *  forces additional fixing update on all the ones, dropped by players.
+ *      Copyright 2021 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -17,20 +18,21 @@
  * You should have received a copy of the GNU General Public License
  * along with Acedia.  If not, see <https://www.gnu.org/licenses/>.
  */
- class Manifest extends _manifest
-    abstract;
+class PickupSpamRule extends GameRules;
+
+function bool OverridePickupQuery(
+    Pawn        toucher,
+    Pickup      touchedPickup,
+    out byte    allowPickup)
+{
+    local HelperPickup helper;
+    helper = class'HelperPickup'.static.GetInstance();
+    if (helper != none) {
+        helper.UpdatePickups();
+    }
+    return super.OverridePickupQuery(toucher, touchedPickup, allowPickup);
+}
 
 defaultproperties
 {
-    features(0)     = class'FixZedTimeLags'
-    features(1)     = class'FixDoshSpam'
-    features(2)     = class'FixFFHack'
-    features(3)     = class'FixInfiniteNades'
-    features(4)     = class'FixAmmoSelling'
-    features(5)     = class'FixSpectatorCrash'
-    features(6)     = class'FixDualiesCost'
-    features(7)     = class'FixInventoryAbuse'
-    features(8)     = class'FixProjectileFF'
-    features(9)     = class'FixPipes'
-    features(10)    = class'FixLogSpam'
 }
