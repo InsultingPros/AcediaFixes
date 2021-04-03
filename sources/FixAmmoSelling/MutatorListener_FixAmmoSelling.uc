@@ -69,7 +69,6 @@ private static function ReplaceOldPickup(Pickup oldPickup)
         KFWeaponPickup(newPickup).bThrown = true;
 }
 
-//  TODO: this is code duplication, some sort of solution is needed
 static final function KFWeapon GetWeaponOfClass(
     Pawn                playerPawn,
     class<Inventory>    weaponClass
