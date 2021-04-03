@@ -1,7 +1,7 @@
 /**
  *      Overloaded mutator events listener to catch and, possibly,
  *  prevent spawning dosh actors.
- *      Copyright 2019 Anton Tarasenko
+ *      Copyright 2019 - 2021 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -25,6 +25,7 @@ static function bool CheckReplacement(Actor other, out byte isSuperRelevant)
 {
     local FixDoshSpam       doshFix;
     local PlayerController  player;
+    if (other == none)                      return true;
     if (other.class != class'CashPickup')   return true;
     //      This means this dosh wasn't spawned in `TossCash()` of `KFPawn`,
     //  so it isn't related to the exploit we're trying to fix.
