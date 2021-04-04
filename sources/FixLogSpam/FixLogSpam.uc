@@ -33,13 +33,19 @@ class FixLogSpam extends Feature
 
 //      This is responsible for fixing log spam due to picking up dropped
 //  weapons without set `inventory` variable.
-var private const bool      fixPickupSpam;
-var private HelperPickup    helperPickupSpam;
+var private config const bool   fixPickupSpam;
+var private HelperPickup        helperPickupSpam;
+
+var private config const bool   fixTraderSpam;
+var private HelperTrader        helperTraderSpam;
 
 protected function OnEnabled()
 {
     if (fixPickupSpam) {
         helperPickupSpam = HelperPickup(_.memory.Allocate(class'HelperPickup'));
+    }
+    if (fixTraderSpam) {
+        helperTraderSpam = HelperTrader(_.memory.Allocate(class'HelperTrader'));
     }
 }
 
@@ -47,6 +53,8 @@ protected function OnDisabled()
 {
     _.memory.Free(helperPickupSpam);
     helperPickupSpam = none;
+    _.memory.Free(helperTraderSpam);
+    helperTraderSpam = none;
 }
 
 public function Tick(float delta)
@@ -59,4 +67,5 @@ public function Tick(float delta)
 defaultproperties
 {
     fixPickupSpam = true
+    fixTraderSpam = true
 }
