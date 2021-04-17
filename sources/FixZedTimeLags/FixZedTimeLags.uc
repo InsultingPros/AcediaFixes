@@ -63,32 +63,28 @@ var private config const int maxGameSpeedUpdatesAmount;
 var private config const bool disableTick;
 //  Counts how much time is left until next update
 var private float updateCooldown;
-//  Recorded game type, to avoid constant conversions every tick
-var private KFGameType gameType;
 
 protected function OnEnabled()
 {
-    gameType = KFGameType(level.game);
-    if (gameType == none) {
-        Destroy();
+    if (disableTick) {
+        _.unreal.GetGameType().Disable('Tick');
     }
-    else if (disableTick) {
-        gameType.Disable('Tick');
-    }
+    _.unreal.OnTick(self).connect = Tick;
 }
 
 protected function OnDisabled()
 {
-    gameType = KFGameType(level.game);
-    if (gameType != none && disableTick) {
-        gameType.Enable('Tick');
+    if (disableTick) {
+        _.unreal.GetGameType().Enable('Tick');
     }
+    _.unreal.OnTick(self).Disconnect();
 }
 
-event Tick(float delta)
+private function Tick(float delta, float timeDilationCoefficient)
 {
-    local float trueTimePassed;
-    if (gameType == none)           return;
+    local KFGameType    gameType;
+    local float         trueTimePassed;
+    gameType = _.unreal.GetKFGameType();
     if (!gameType.bZEDTimeActive)   return;
     //      Unfortunately we need to keep disabling `Tick()` probe function,
     //  because it constantly gets enabled back and I don't know where
@@ -97,19 +93,19 @@ event Tick(float delta)
         gameType.Disable('Tick');
     }
     //  How much real (not in-game) time has passed
-    trueTimePassed = delta * (1.1 / level.timeDilation);
+    trueTimePassed = delta / timeDilationCoefficient;
     gameType.currentZEDTimeDuration -= trueTimePassed;
 
     //  Handle speeding up phase
     if (gameType.bSpeedingBackUp) {
-        DoSpeedBackUp(trueTimePassed);
+        DoSpeedBackUp(trueTimePassed, gameType);
     }
-    else if (gameType.currentZEDTimeDuration < GetSpeedupDuration())
+    else if (gameType.currentZEDTimeDuration < GetSpeedupDuration(gameType))
     {
         gameType.bSpeedingBackUp    = true;
-        updateCooldown              = GetFullUpdateCooldown();
+        updateCooldown              = GetFullUpdateCooldown(gameType);
         TellClientsZedTimeEnds();
-        DoSpeedBackUp(trueTimePassed);
+        DoSpeedBackUp(trueTimePassed, gameType);
     }
     //  End zed time once it's duration has passed
     if (gameType.currentZEDTimeDuration <= 0)
@@ -143,7 +139,7 @@ private final function TellClientsZedTimeEnds()
 
 //      This function is called every tick during speed up phase and manages
 //  gradual game speed increase.
-private final function DoSpeedBackUp(float trueTimePassed)
+private final function DoSpeedBackUp(float trueTimePassed, KFGameType gameType)
 {
     //      Game speed will always be updated in our `Tick()` event
     //  at the very end of the zed time.
@@ -159,21 +155,22 @@ private final function DoSpeedBackUp(float trueTimePassed)
         return;
     }
     else {
-        updateCooldown = GetFullUpdateCooldown();
+        updateCooldown = GetFullUpdateCooldown(gameType);
     }
-    slowdownScale   = gameType.currentZEDTimeDuration / GetSpeedupDuration();
+    slowdownScale   =
+        gameType.currentZEDTimeDuration / GetSpeedupDuration(gameType);
     newGameSpeed    = Lerp(slowdownScale, 1.0, gameType.zedTimeSlomoScale);
     gameType.SetGameSpeed(newGameSpeed);
 }
 
-private final function float GetSpeedupDuration()
+private final function float GetSpeedupDuration(KFGameType gameType)
 {
     return gameType.zedTimeDuration  * 0.166;
 }
 
-private final function float GetFullUpdateCooldown()
+private final function float GetFullUpdateCooldown(KFGameType gameType)
 {
-    return GetSpeedupDuration() / maxGameSpeedUpdatesAmount;
+    return GetSpeedupDuration(gameType) / maxGameSpeedUpdatesAmount;
 }
 
 defaultproperties

@@ -100,18 +100,20 @@ var public const config float   proximityCheckElevation;
 //  else we need to track.
 struct PipeRecord
 {
-    //  Pipe that this record tracks
-    var PipeBombProjectile      pipe;
+    //  Pipe that this record tracks.
+    //  Reference to `PipeBombProjectile`.
+    var NativeActorRef  pipe;
     //  Each pipe has a separate timer for their scheduled proximity checks,
     //  so we need a separate variable to track when that time comes for
     //  each and every pipe 
-    var float                   timerCountDown;
+    var float           timerCountDown;
     //  `true` if we have already intercepted (and replaced with our own)
     //  the proximity check for the pipe in this record
-    var bool                    proximityCheckIntercepted;
-    //  Reference to the `ExtendedZCollision` we created to catch
+    var bool            proximityCheckIntercepted;
+    //      Reference to the `ExtendedZCollision` we created to catch
     //  `TakeDamage()` event.
-    var PipesSafetyCollision    safetyCollision;
+    //      Reference to `PipesSafetyCollision`.
+    var NativeActorRef  safetyCollision;
 };
 var private array<PipeRecord> pipeRecords;
 
@@ -121,12 +123,20 @@ var private array<PipeRecord> pipeRecords;
 //  pipe bombs spawning).
 var private bool pipesRelevancyFlag;
 
+var private Timer cleanupTimer;
+
 protected function OnEnabled()
 {
-    local PipeBombProjectile nextPipe;
+    local LevelInfo             level;
+    local PipeBombProjectile    nextPipe;
     pipesRelevancyFlag = class'PipeBombProjectile'.default.bAlwaysRelevant;
     class'PipeBombProjectile'.default.bGameRelevant = false;
+    //  Set cleanup timer, there is little point to making
+    //  clean up interval configurable.
+    cleanupTimer = _.time.StartTimer(5.0, true);
+    cleanupTimer.OnElapsed(self).connect = CleanPipeRecords;
     //  Fix pipes that are already lying about on the map
+    level = _.unreal.GetLevel();
     foreach level.DynamicActors(class'KFMod.PipeBombProjectile', nextPipe) {
         RegisterPipe(nextPipe);
     }
@@ -136,6 +146,7 @@ protected function OnDisabled()
 {
     local int i;
     class'PipeBombProjectile'.default.bGameRelevant = pipesRelevancyFlag;
+    cleanupTimer.FreeSelf();
     for (i = 0; i < pipeRecords.length; i += 1) {
         ReleasePipe(pipeRecords[i]);
     }
@@ -154,19 +165,18 @@ public final function RegisterPipe(PipeBombProjectile newPipe)
     //  Check whether we have already added this pipe
     for (i = 0; i < pipeRecords.length; i += 1)
     {
-        if (pipeRecords[i].pipe == newPipe) {
+        if (pipeRecords[i].pipe.Get() == newPipe) {
             return;
         }
     }
-    newRecord.pipe = newPipe;
+    newRecord.pipe = _.unreal.ActorRef(newPipe);
     //  Setup `PipesSafetyCollision` for catching `TakeDamage()` events
     //  (only if we need to according to settings)
     if (NeedSafetyCollision())
     {
-        newRecord.safetyCollision =
-            class'PipesSafetyCollision'.static.ProtectPipes(newPipe);
+        newRecord.safetyCollision = _.unreal.ActorRef(
+            class'PipesSafetyCollision'.static.ProtectPipes(newPipe));
     }
-    newRecord.pipe = newPipe;
     pipeRecords[pipeRecords.length] = newRecord;
     //  Intercept proximity checks (only if we need to according to settings)
     if (NeedManagedProximityChecks())
@@ -181,16 +191,26 @@ public final function RegisterPipe(PipeBombProjectile newPipe)
 //  Rolls back our changes to the pipe in the given `PipeRecord`.
 public final function ReleasePipe(PipeRecord pipeRecord)
 {
+    local PipeBombProjectile    pipe;
+    local PipesSafetyCollision  safetyCollision;
     if (pipeRecord.safetyCollision != none)
     {
-        pipeRecord.safetyCollision.TurnOff();
+        safetyCollision =
+            PipesSafetyCollision(pipeRecord.safetyCollision.Get());
+        pipeRecord.safetyCollision.FreeSelf();
         pipeRecord.safetyCollision = none;
     }
-    if (pipeRecord.proximityCheckIntercepted && pipeRecord.pipe != none)
+    if (safetyCollision != none) {
+        safetyCollision.TurnOff();
+    }
+    pipe = PipeBombProjectile(pipeRecord.pipe.Get());
+    pipeRecord.pipe.FreeSelf();
+    pipeRecord.pipe = none;
+    if (pipeRecord.proximityCheckIntercepted && pipe != none)
     {
         pipeRecord.proximityCheckIntercepted = false;
-        if (IsPipeDoingProximityChecks(pipeRecord.pipe)) {
-            pipeRecord.pipe.SetTimer(pipeRecord.timerCountDown, true);
+        if (IsPipeDoingProximityChecks(pipe)) {
+            pipe.SetTimer(pipeRecord.timerCountDown, true);
         }
     }
 }
@@ -215,12 +235,15 @@ private final function bool NeedManagedProximityChecks()
 }
 
 //  Removes dead records with pipe instances turned into `none`
-private final function CleanPipeRecords()
+private final function CleanPipeRecords(Timer source)
 {
     local int i;
     while (i < pipeRecords.length)
     {
-        if (pipeRecords[i].pipe == none) {
+        if (pipeRecords[i].pipe.Get() == none)
+        {
+            _.memory.Free(pipeRecords[i].pipe);
+            _.memory.Free(pipeRecords[i].safetyCollision);
             pipeRecords.Remove(i, 1);
         }
         else {
@@ -235,14 +258,18 @@ private final function CleanPipeRecords()
 //      2. Have not yet had it's logic replaced.
 private final function InterceptProximityChecks()
 {
-    local int i;
+    local int                   i;
+    local PipeBombProjectile    nextPipe;
     for (i = 0; i < pipeRecords.length; i += 1)
     {
         if (pipeRecords[i].proximityCheckIntercepted)   continue;
-        if (pipeRecords[i].pipe == none)                continue;
-        if (IsPipeDoingProximityChecks(pipeRecords[i].pipe))
+        nextPipe = PipeBombProjectile(pipeRecords[i].pipe.Get());
+        if (nextPipe == none)                           continue;
+
+        if (IsPipeDoingProximityChecks(nextPipe))
         {
-            pipeRecords[i].pipe.SetTimer(0, false);
+            //  Turn off pipe's own timer
+            nextPipe.SetTimer(0, false);
             //  We set `1.0` because that is the vanilla value;
             //  Line 123 of "PipeBombProjectile.uc": `SetTimer(1.0,True);`
             pipeRecords[i].timerCountDown = 1.0;
@@ -267,30 +294,29 @@ private final function bool IsPipeDoingProximityChecks(PipeBombProjectile pipe)
 //  for them
 private final function PerformProximityChecks(float delta)
 {
-    local int       i;
-    local Vector    checkLocation;
+    local int                   i;
+    local Vector                checkLocation;
+    local PipeBombProjectile    nextPipe;
     for (i = 0; i < pipeRecords.length; i += 1)
     {
-        if (pipeRecords[i].pipe == none)                        continue;
+        pipeRecords[i].timerCountDown -= delta;
+        if (pipeRecords[i].timerCountDown > 0)      continue;
+        nextPipe = PipeBombProjectile(pipeRecords[i].pipe.Get());
+        if (nextPipe == none)                       continue;
         //  `timerCountDown` does not makes sense for pipes that
         //  are not doing proxiity checks
-        if (!IsPipeDoingProximityChecks(pipeRecords[i].pipe))   continue;
+        if (!IsPipeDoingProximityChecks(nextPipe))  continue;
 
-        pipeRecords[i].timerCountDown -= delta;
-        if (pipeRecords[i].timerCountDown <= 0)
-        {
-            checkLocation = pipeRecords[i].pipe.location;
-            if (proximityCheckElevation > 0) {
-                checkLocation.z += proximityCheckElevation;
-            }
-            //  This method repeats vanilla logic with some additional checks
-            //  and sets new timers by itself
-            DoPipeProximityCheck(pipeRecords[i], checkLocation);
+        checkLocation = nextPipe.location;
+        if (proximityCheckElevation > 0) {
+            checkLocation.z += proximityCheckElevation;
         }
+        //  This method repeats vanilla logic with some additional checks
+        //  and sets new timers by itself
+        DoPipeProximityCheck(pipeRecords[i], checkLocation);
     }
 }
 
-//      Assumes `pipeRecord.pipe != none`
 //      Original code is somewhat messy and was reworked in this more manageble
 //  form as core logic is simple - for every nearby `Pawn` we increase the
 //  percieved level for the pipe and when it reaches certain threshold
@@ -319,12 +345,15 @@ private final function DoPipeProximityCheck(
     local Pawn                  checkPawn;
     local float                 threatLevel;
     local PipeBombProjectile    pipe;
-    pipe = pipeRecord.pipe;
+    pipe = PipeBombProjectile(pipeRecord.pipe.Get());
+    if (pipe == none) {
+        return;
+    }
     pipe.bAlwaysRelevant = false;
     pipe.PlaySound(pipe.beepSound,, 0.5,, 50.0);
     //  Out rewritten logic, which should do exactly the same:
-    foreach VisibleCollidingActors( class'Pawn', checkPawn,
-                                    pipe.detectionRadius, checkLocation)
+    foreach pipe.VisibleCollidingActors(    class'Pawn', checkPawn,
+                                            pipe.detectionRadius, checkLocation)
     {
         threatLevel += GetThreatLevel(pipe, checkPawn);
         //  Explosion! No need to bother with the rest of the `Pawn`s.
@@ -402,7 +431,6 @@ private final function float GetThreatLevel(
 
 event Tick(float delta)
 {
-    CleanPipeRecords();
     if (NeedManagedProximityChecks())
     {
         InterceptProximityChecks();

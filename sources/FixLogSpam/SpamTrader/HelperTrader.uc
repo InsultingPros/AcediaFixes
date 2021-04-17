@@ -50,9 +50,11 @@ class HelperTrader extends AcediaObject
 
 //      Remember instance of `WeaponLocker` that we spawned, so we can clean
 //  it up later.
-var private WeaponLocker        dummyLocker;
+//      Reference to `WeaponLocker`
+var private NativeActorRef          dummyLocker;
 //  Remember fixed shops, so we can unfix them later.
-var private array<ShopVolume>   fixedShops;
+//  Reference tp `ShopVolume`.
+var private array<NativeActorRef>   fixedShops;
 
 var LoggerAPI.Definition errNoReplacementLocker;
 
@@ -70,6 +72,7 @@ protected function Constructor()
     if (replacementLocker == none)
     {
         _.logger.Auto(errNoReplacementLocker);
+        FreeSelf();
         return;
     }
     //  Setup locker
@@ -78,29 +81,41 @@ protected function Constructor()
         if (nextShop == none)           continue;
         if (nextShop.myTrader != none)  continue;
         nextShop.myTrader = replacementLocker;
-        fixedShops[fixedShops.length] = nextShop;
+        fixedShops[fixedShops.length] = _.unreal.ActorRef(nextShop);
     }
 }
 
 protected function Finalizer()
 {
-    local int i;
+    local int           i;
+    local ShopVolume    nextShop;
+    local Actor         lockerInstance;
+    //  Free shops
     for (i = 0; i < fixedShops.length; i += 1)
     {
-        if (fixedShops[i] != none) {
-            fixedShops[i].myTrader = none;
+        nextShop = ShopVolume(fixedShops[i].Get());
+        fixedShops[i].FreeSelf();
+        if (nextShop != none) {
+            nextShop.myTrader = none;
         }
     }
-    if (dummyLocker != none && !dummyLocker.bPendingDelete) {
-        dummyLocker.Destroy();
+    fixedShops.length = 0;
+    //  Free locker
+    if (dummyLocker != none) {
+        lockerInstance = dummyLocker.Get();
+        dummyLocker.FreeSelf();
+    }
+    if (lockerInstance != none) {
+        lockerInstance.Destroy();
     }
 }
 
 private final function WeaponLocker SpawnDummyWeaponLocker()
 {
+    local WeaponLocker lockerInstance;
     local bool savedCollideWorld, savedCollideActors;
-    if (dummyLocker != none && !dummyLocker.bPendingDelete) {
-        return dummyLocker;
+    if (dummyLocker != none) {
+        return WeaponLocker(dummyLocker.Get());
     }
     //  Disable collision so that dummy `WeaponLocker` would both not affect
     //  gameplay and would not fail spawning due to being inside terrain or
@@ -109,16 +124,17 @@ private final function WeaponLocker SpawnDummyWeaponLocker()
     savedCollideActors  = class'WeaponLocker'.default.bBlockActors;
     class'WeaponLocker'.default.bCollideWorld   = false;
     class'WeaponLocker'.default.bBlockActors    = false;
-    dummyLocker = WeaponLocker(_.memory.Allocate(class'WeaponLocker'));
+    lockerInstance = WeaponLocker(_.memory.Allocate(class'WeaponLocker'));
     class'WeaponLocker'.default.bCollideWorld   = savedCollideWorld;
     class'WeaponLocker'.default.bBlockActors    = savedCollideActors;
-    if (dummyLocker != none)
+    if (lockerInstance != none)
     {
-        dummyLocker.bHidden = true;
-        dummyLocker.SetDrawType(DT_None);
-        dummyLocker.SetCollision(false);
+        lockerInstance.bHidden = true;
+        lockerInstance.SetDrawType(DT_None);
+        lockerInstance.SetCollision(false);
     }
-    return dummyLocker;
+    dummyLocker = _.unreal.ActorRef(lockerInstance);
+    return lockerInstance;
 }
 
 private final function WeaponLocker FindExistingWeaponLocker()

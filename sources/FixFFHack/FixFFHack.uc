@@ -60,12 +60,54 @@ var private config const array< class<DamageType> > neverScale;
 
 protected function OnEnabled()
 {
-    _.unreal.AddGameRules(class'FFHackRule');
+    _.unreal.gameRules.OnNetDamage(self).connect = NetDamage;
 }
 
 protected function OnDisabled()
 {
-    _.unreal.RemoveGameRules(class'FFHackRule');
+    _.unreal.gameRules.OnNetDamage(self).Disconnect();
+}
+
+function int NetDamage(
+    int                 originalDamage,
+    int                 damage,
+    Pawn                injured,
+    Pawn                instigator,
+    Vector              hitLocation,
+    out Vector          momentum,
+    class<DamageType>   damageType)
+{
+    //  Something is very wrong and we can just bail on this damage
+    if (damageType == none) {
+        return 0;
+    }
+    //  We only check when suspicious instigators that aren't a world
+    if (!damageType.default.bCausedByWorld && IsSuspicious(instigator))
+    {
+        if (ShouldScaleDamage(damageType))
+        {
+            //  Remove pushback to avoid environmental kills
+            momentum = Vect(0.0, 0.0, 0.0);
+            damage *= _.unreal.GetKFGameType().friendlyFireScale;
+        }
+    }
+    return damage;
+}
+
+private function bool IsSuspicious(Pawn instigator)
+{
+    //  Instigator vanished
+    if (instigator == none) return true;
+
+    //  Instigator already became spectator
+    if (KFPawn(instigator) != none)
+    {
+        if (instigator.playerReplicationInfo != none) {
+            return instigator.playerReplicationInfo.bOnlySpectator;
+        }
+        return true; // Replication info is gone => suspicious
+    }
+    return false;
 }
 
 //  Checks general rule and exception list

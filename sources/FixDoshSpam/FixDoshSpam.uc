@@ -8,7 +8,7 @@
  *      It fixes them by limiting speed, with which dosh can spawn, and
  *  allowing this limit to decrease when there's already too much dosh
  *  present on the map.
- *      Copyright 2019 Anton Tarasenko
+ *      Copyright 2019 - 2021 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -71,39 +71,56 @@ var private config const float doshPerSecondLimitMin;
 //  scale linearly between them as it's amount grows.
 var private config const int criticalDoshAmount;
 
-//      To limit dosh spawning speed we need some measure of
-//  time passage between ticks.
-//  This variable stores last value seen by us as a good approximation.
-//      It's a real (not in-game) time.
-var private float lastTickDuration;
+//      We immediately reduce the rate dosh can be spawned at when players throw
+//  new wads of cash. But, for performance reasons, we only periodically turn it
+//  back up. This interval determines how often we check for whether it's okay
+//  to raise the limit on the spawned dosh.
+//      You should not set this value too high, it is recommended not to exceed
+//  1 second.
+var private config const float checkInterval;
 
 //      This structure records how much a certain player has
 //  contributed to an overall dosh creation.
 struct DoshStreamPerPlayer
 {
-    var PlayerController    player;
+    //  Reference to `PlayerController`
+    var NativeActorRef  player;
     //  Amount of dosh we remember this player creating, decays with time.
-    var float               contribution;
+    var float           contribution;
 };
 var private array<DoshStreamPerPlayer> currentContributors;
 
 //  Wads of cash that are lying around on the map.
-var private array<CashPickup> wads;
+var private array<NativeActorRef> wads;
+
+//  Generates "reset" events when `wads` array is getting cleaned from
+//  destroyed/picked up dosh and players' contributions are reduced.
+var private RealTimer checkTimer;
 
 protected function OnEnabled()
 {
-    local CashPickup nextCash;
+    local LevelInfo     level;
+    local CashPickup    nextCash;
+    checkTimer = _.time.StartRealTimer(checkInterval, true);
+    checkTimer.OnElapsed(self).connect = Tick;
+    level = _.unreal.GetLevel();
     //      Find all wads of cash laying around on the map,
     //  so that we could accordingly limit the cash spam.
     foreach level.DynamicActors(class'KFMod.CashPickup', nextCash) {
-        wads[wads.length] = nextCash;
+        wads[wads.length] = _.unreal.ActorRef(nextCash);
     }
 }
 
 protected function OnDisabled()
 {
+    local int i;
+    _.memory.FreeMany(wads);
+    for (i = 0; i < currentContributors.length; i += 1) {
+        currentContributors[i].player.FreeSelf();
+    }
     wads.length                 = 0;
     currentContributors.length  = 0;
+    checkTimer.FreeSelf();
 }
 
 //  Did player with this controller contribute to the latest dosh generation?
@@ -117,11 +134,13 @@ public final function bool IsDoshStreamOverLimit()
 {
     local int   i;
     local float overallContribution;
+    local float allowedContribution;
     overallContribution = 0.0;
     for (i = 0; i < currentContributors.length; i += 1) {
         overallContribution += currentContributors[i].contribution;
     }
-    return (overallContribution > lastTickDuration * GetCurrentDPSLimit());
+    allowedContribution = checkTimer.GetElapsedTime() * GetCurrentDPSLimit();
+    return overallContribution > allowedContribution;
 }
 
 //  What is our current dosh per second limit?
@@ -148,7 +167,7 @@ private final function int GetContributorIndex(PlayerController player)
 
     for (i = 0; i < currentContributors.length; i += 1)
     {
-        if (currentContributors[i].player == player) {
+        if (currentContributors[i].player.Get() == player) {
             return i;
         }
     }
@@ -157,20 +176,11 @@ private final function int GetContributorIndex(PlayerController player)
 
 //      Adds given cash to given player contribution record and
 //  registers that cash in our wads array.
-//  Does nothing if given cash was already registered.
 public final function AddContribution(PlayerController player, CashPickup cash)
 {
-    local int                   i;
     local int                   playerIndex;
     local DoshStreamPerPlayer   newStreamRecord;
-    //  Check if given dosh was already accounted for.
-    for (i = 0; i < wads.length; i += 1)
-    {
-        if (cash == wads[i]) {
-            return;
-        }
-    }
-    wads[wads.length] = cash;
+    wads[wads.length] = _.unreal.ActorRef(cash);
     //  Add contribution to player
     playerIndex = GetContributorIndex(player);
     if (playerIndex >= 0)
@@ -178,16 +188,16 @@ public final function AddContribution(PlayerController player, CashPickup cash)
         currentContributors[playerIndex].contribution += 1.0;
         return;
     }
-    newStreamRecord.player          = player;
+    newStreamRecord.player          = _.unreal.ActorRef(player);
     newStreamRecord.contribution    = 1.0;
     currentContributors[currentContributors.length] = newStreamRecord;
 }
 
-private final function ReducePlayerContributions(float trueTimePassed)
+private final function ReducePlayerContributions()
 {
     local int   i;
     local float streamReduction;
-    streamReduction = trueTimePassed *
+    streamReduction = checkInterval *
         (GetCurrentDPSLimit() / currentContributors.length);
     for (i = 0; i < currentContributors.length; i += 1) {
         currentContributors[i].contribution -= streamReduction;
@@ -201,7 +211,9 @@ private final function CleanWadsArray()
     i = 0;
     while (i < wads.length)
     {
-        if (wads[i] == none) {
+        if (wads[i].Get() == none)
+        {
+            wads[i].FreeSelf();
             wads.Remove(i, 1);
         }
         else {
@@ -219,20 +231,21 @@ private final function RemoveNonContributors()
     {
         //      We want to keep on record even players that quit,
         //  since their contribution still must be accounted for.
-        if (currentContributors[i].contribution <= 0.0) continue;
-        updContributors[updContributors.length] = currentContributors[i];
+        if (currentContributors[i].contribution <= 0.0) {
+            currentContributors[i].player.FreeSelf();
+        }
+        else {
+            updContributors[updContributors.length] = currentContributors[i];
+        }
     }
     currentContributors = updContributors;
 }
 
-event Tick(float delta)
+private function Tick(Timer source)
 {
-    local float trueTimePassed;
-    trueTimePassed = delta * (1.1 / level.timeDilation);
     CleanWadsArray();
-    ReducePlayerContributions(trueTimePassed);
+    ReducePlayerContributions();
     RemoveNonContributors();
-    lastTickDuration = trueTimePassed;
 }
 
 defaultproperties
@@ -240,6 +253,7 @@ defaultproperties
     doshPerSecondLimitMax   = 50
     doshPerSecondLimitMin   = 5
     criticalDoshAmount      = 25
+    checkInterval           = 0.25
     //  Listeners
     requiredListeners(0) = class'MutatorListener_FixDoshSpam'
 }

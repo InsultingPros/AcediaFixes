@@ -131,13 +131,12 @@ struct WeaponRecord
     var int             lastAmmoAmount;
 };
 
-//  All weapons we've detected so far.
-var private array<WeaponRecord> registeredWeapons; 
-
 protected function OnEnabled()
 {
+    local LevelInfo     level;
     local KFWeapon      nextWeapon;
     local KFAmmoPickup  nextPickup;
+    level = _.unreal.GetLevel();
     //  Find all abusable weapons
     foreach level.DynamicActors(class'KFMod.KFWeapon', nextWeapon) {
         FixWeapon(nextWeapon);
@@ -151,8 +150,12 @@ protected function OnEnabled()
 protected function OnDisabled()
 {
     local int                       i;
+    local LevelInfo                 level;
     local AmmoPickupStalker         nextStalker;
     local array<AmmoPickupStalker>  stalkers;
+    local array<WeaponRecord>       registeredWeapons;
+    level = _.unreal.GetLevel();
+    registeredWeapons = FixAmmoSellingService(GetService()).registeredWeapons;
     //  Restore all the `pickupClass` variables we've changed.
     for (i = 0; i < registeredWeapons.length; i += 1)
     {
@@ -162,7 +165,6 @@ protected function OnDisabled()
                 registeredWeapons[i].weapon.default.pickupClass;
         }
     }
-    registeredWeapons.length = 0;
     //  Kill all the stalkers;
     //  to be safe, avoid destroying them directly in the iterator.
     foreach level.DynamicActors(class'AmmoPickupStalker', nextStalker) {
@@ -194,10 +196,14 @@ public static final function bool IsReplacer(class<Actor> pickupClass)
 //  2. Starts tracking abusable weapon to detect when player buys ammo for it.
 public final function FixWeapon(KFWeapon potentialAbuser)
 {
-    local int           i;
-    local WeaponRecord  newRecord;
+    local int                   i;
+    local WeaponRecord          newRecord;
+    local array<WeaponRecord>   registeredWeapons; 
+    local FixAmmoSellingService service;
     if (potentialAbuser == none) return;
 
+    service = FixAmmoSellingService(GetService());
+    registeredWeapons = service.registeredWeapons;
     for (i = 0; i < registeredWeapons.length; i += 1)
     {
         if (registeredWeapons[i].weapon == potentialAbuser) {
@@ -211,13 +217,14 @@ public final function FixWeapon(KFWeapon potentialAbuser)
             potentialAbuser.pickupClass = rules[i].pickupReplacement;
             newRecord.weapon = potentialAbuser;
             registeredWeapons[registeredWeapons.length] = newRecord;
+            service.registeredWeapons = registeredWeapons;
             return;
         }
     }
 }
 
 //  Finds ammo instance for recorded weapon in it's owner's inventory.
-private final function WeaponRecord FindAmmoInstance(WeaponRecord record)
+public final function WeaponRecord FindAmmoInstance(WeaponRecord record)
 {
     local Inventory     invIter;
     local KFAmmunition  ammo;
@@ -285,7 +292,7 @@ private final function float GetPriceCorrection(
 //      Takes current ammo and last recorded in `record` value to calculate
 //  how much money to take from the player
 //  (calculations are done via `GetPriceCorrection()`).
-private final function WeaponRecord TaxAmmoChange(WeaponRecord record)
+public final function WeaponRecord TaxAmmoChange(WeaponRecord record)
 {
     local int                   ammoDiff;
     local KFPawn                taxPayer;
@@ -322,16 +329,20 @@ private final function WeaponRecord TaxAmmoChange(WeaponRecord record)
 //  to avoid charging his for it.
 public final function RecordAmmoPickup(Pawn pawnWithAmmo, KFAmmoPickup pickup)
 {
-    local int i;
-    local int newAmount;
+    local int                   i;
+    local int                   newAmount;
+    local array<WeaponRecord>   registeredWeapons; 
+    local FixAmmoSellingService service;
     //  Check conditions from `KFAmmoPickup` code (`Touch()` method)
-    if (pickup == none)                                     return;
-    if (pawnWithAmmo == none)                               return;
-    if (pawnWithAmmo.controller == none)                    return;
-    if (!pawnWithAmmo.bCanPickupInventory)                  return;
-    if (!FastTrace(pawnWithAmmo.location, pickup.location)) return;
+    if (pickup == none)                                             return;
+    if (pawnWithAmmo == none)                                       return;
+    if (pawnWithAmmo.controller == none)                            return;
+    if (!pawnWithAmmo.bCanPickupInventory)                          return;
+    if (!pickup.FastTrace(pawnWithAmmo.location, pickup.location))  return;
 
     //  Add relevant amount of ammo to our records
+    service = FixAmmoSellingService(GetService());
+    registeredWeapons = service.registeredWeapons;
     for (i = 0; i < registeredWeapons.length; i += 1)
     {
         if (registeredWeapons[i].weapon == none) continue;
@@ -343,29 +354,7 @@ public final function RecordAmmoPickup(Pawn pawnWithAmmo, KFAmmoPickup pickup)
             registeredWeapons[i].lastAmmoAmount = newAmount;
         }
     }
-}
-
-event Tick(float delta)
-{
-    local int i;
-    //  For all the weapon records...
-    i = 0;
-    while (i < registeredWeapons.length)
-    {
-        //  ...remove dead records
-        if (registeredWeapons[i].weapon == none)
-        {
-            registeredWeapons.Remove(i, 1);
-            continue;
-        }
-        //  ...find ammo if it's missing
-        if (registeredWeapons[i].ammo == none) {
-            registeredWeapons[i] = FindAmmoInstance(registeredWeapons[i]);
-        }
-        //  ...tax for ammo, if we can
-        registeredWeapons[i] = TaxAmmoChange(registeredWeapons[i]);
-        i += 1;
-    }
+    service.registeredWeapons = registeredWeapons;
 }
 
 defaultproperties
@@ -383,4 +372,6 @@ defaultproperties
     rules(9)=(abusableWeapon=class'KFMod.SeekerSixRocketLauncher',pickupReplacement=class'FixAmmoSellingClass_SeekerSixPickup')
     //  Listeners
     requiredListeners(0) = class'MutatorListener_FixAmmoSelling'
+    //  Service
+    serviceClass = class'FixAmmoSellingService'
 }

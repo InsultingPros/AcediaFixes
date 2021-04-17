@@ -9,7 +9,7 @@
  *      Fix only works with vanilla pistols, as it's unpredictable what
  *  custom ones can do and they can handle these issues on their own
  *  in a better way.
- *      Copyright 2020 Anton Tarasenko
+ *      Copyright 2020 - 2021 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -52,7 +52,8 @@ class FixDualiesCost extends Feature
  *      These issues are fixed by directly assigning
  *  proper values to `SellValue`. To do that we need to detect when player
  *  buys/sells/drops/picks up weapons, which we accomplish by catching
- *  `CheckReplacement()` event for weapon instances. This approach has two issues.
+ *  `CheckReplacement()` event for weapon instances. This approach has two
+ *  issues.
  *      One is that, if vanilla's code sets an incorrect sell value, -
  *  it's doing it after weapon is spawned and, therefore,
  *  after `CheckReplacement()` call, so we have, instead, to remember to do
@@ -125,7 +126,8 @@ var private const array<DualiesPair> dualiesClasses;
 //  Describe sell values that need to be applied at earliest later point.
 struct WeaponValuePair
 {
-    var KFWeapon        weapon;
+    //  Reference to `KFWeapon` instance
+    var NativeActorRef  weapon;
     var float           value;
 };
 var private const array<WeaponValuePair> pendingValues;
@@ -133,13 +135,15 @@ var private const array<WeaponValuePair> pendingValues;
 //  Describe sell values of all currently existing single pistols.
 struct WeaponDataRecord
 {
-    var KFWeapon        reference;
+    //  Reference to `KFWeapon` instance
+    var NativeActorRef  reference;
     var class<KFWeapon> class;
     var float           value;
     //      The whole point of this structure is to remember value of a weapon
     //  after it's destroyed. Since `reference` will become `none` by then,
     //  we will use the `owner` reference to identify the weapon.
-    var Pawn            owner;
+    //      Reference to `Pawn`.
+    var NativeActorRef  owner;
 };
 var private const array<WeaponDataRecord> storedValues;
 
@@ -148,45 +152,46 @@ var private int nextSellValue;
 
 protected function OnEnabled()
 {
-    local KFWeapon nextWeapon;
-    //  Find all frags, that spawned when this fix wasn't running.
+    local LevelInfo level;
+    local KFWeapon  nextWeapon;
+    _.unreal.OnTick(self).connect = Tick;
+    _.unreal.gameRules.OnOverridePickupQuery(self).connect = PickupQuery;
+    level = _.unreal.GetLevel();
+    //  Find all weapons, that spawned when this fix wasn't running.
     foreach level.DynamicActors(class'KFMod.KFWeapon', nextWeapon) {
         RegisterSinglePistol(nextWeapon, false);
     }
-    level.game.AddGameModifier(Spawn(class'DualiesCostRule'));
 }
 
 protected function OnDisabled()
 {
-    local GameRules         rulesIter;
-    local DualiesCostRule   ruleToDestroy;
-    //  Check first rule
-    if (level.game.gameRulesModifiers == none) return;
-
-    ruleToDestroy = DualiesCostRule(level.game.gameRulesModifiers);
-    if (ruleToDestroy != none)
+    local int i;
+    _.unreal.OnTick(self).Disconnect();
+    _.unreal.gameRules.OnOverridePickupQuery(self).Disconnect();
+    for (i = 0; i < storedValues.length; i += 1)
     {
-        level.game.gameRulesModifiers = ruleToDestroy.nextGameRules;
-        ruleToDestroy.Destroy();
-        return;
+        storedValues[i].reference.FreeSelf();
+        storedValues[i].owner.FreeSelf();
     }
-    //  Check rest of the rules
-    rulesIter = level.game.gameRulesModifiers;
-    while (rulesIter != none)
-    {
-        ruleToDestroy = DualiesCostRule(rulesIter.nextGameRules);
-        if (ruleToDestroy != none)
-        {
-            rulesIter.nextGameRules = ruleToDestroy.nextGameRules;
-            ruleToDestroy.Destroy();
-        }
-        rulesIter = rulesIter.nextGameRules;
+    for (i = 0; i < pendingValues.length; i += 1) {
+        pendingValues[i].weapon.FreeSelf();
     }
 }
 
-public final function SetNextSellValue(int newValue)
+function bool PickupQuery(
+    Pawn        other,
+    Pickup      item,
+    out byte    allowPickup)
 {
-    nextSellValue = newValue;
+    local KFWeaponPickup weaponPickup;
+    weaponPickup = KFWeaponPickup(item);
+    if (weaponPickup != none)
+    {
+        ApplyPendingValues();
+        StoreSinglePistolValues();
+        nextSellValue = weaponPickup.sellValue;
+    }
+    return false;
 }
 
 //  Finds a weapon of a given class in given `Pawn`'s inventory.
@@ -270,15 +275,13 @@ public final function RegisterSinglePistol(
     if (singlePistol == none)               return;
     if (GetIndexAs(singlePistol, true) < 0) return;
 
-    newRecord.reference = singlePistol;
+    newRecord.reference = _.unreal.ActorRef(singlePistol);
     newRecord.class     = singlePistol.class;
-    newRecord.owner     = singlePistol.instigator;
-    if (justSpawned)
-    {
+    newRecord.owner     = _.unreal.ActorRef(singlePistol.instigator);
+    if (justSpawned) {
         newRecord.value = nextSellValue;
     }
-    else
-    {
+    else {
         newRecord.value = singlePistol.sellValue;
     }
     storedValues[storedValues.length] = newRecord;
@@ -332,7 +335,7 @@ public final function FixCostAfterBuying(KFWeapon dualPistols)
     //      `dualPistols` will be the new pair of pistols, but it's value will
     //  get overwritten by vanilla's code after this function.
     //  So we must add it to pending values to be changed later.
-    newPendingValue.weapon  = dualPistols;
+    newPendingValue.weapon = _.unreal.ActorRef(dualPistols);
     if (dualPistols.class == class'KFMod.Dualies')
     {
         //  9mm is an exception.
@@ -383,50 +386,59 @@ public final function FixCostAfterPickUp(KFWeapon dualPistols)
     }
     for (i = 0; i < storedValues.length; i += 1)
     {
-        if (storedValues[i].reference != none)                      continue;
+        if (storedValues[i].reference.Get() != none)                continue;
         if (storedValues[i].class != dualiesClasses[index].single)  continue;
-        if (storedValues[i].owner != dualPistols.instigator)        continue;
-        newPendingValue.weapon  = dualPistols;
+        if (storedValues[i].owner.Get() != dualPistols.instigator)  continue;
+
+        newPendingValue.weapon  = _.unreal.ActorRef(dualPistols);
         newPendingValue.value   = storedValues[i].value + nextSellValue;
         pendingValues[pendingValues.length] = newPendingValue;
         break;
     }
 }
 
-public final function ApplyPendingValues()
+private final function ApplyPendingValues()
 {
-    local int i;
+    local int       i;
+    local KFWeapon  nextWeapon;
     for (i = 0; i < pendingValues.length; i += 1)
     {
-        if (pendingValues[i].weapon == none)    continue;
+        nextWeapon = KFWeapon(pendingValues[i].weapon.Get());
+        pendingValues[i].weapon.FreeSelf();
+        if (nextWeapon == none) {
+            continue;
+        }
         //      Our fixes can only increase the correct (`!= -1`)
         //  sell value of weapons, so if we only need to change sell value
         //  if we're allowed to increase it or it's incorrect.
-        if (allowSellValueIncrease || pendingValues[i].weapon.sellValue == -1) {
-            pendingValues[i].weapon.sellValue = pendingValues[i].value;
+        if (allowSellValueIncrease || nextWeapon.sellValue == -1) {
+            nextWeapon.sellValue = pendingValues[i].value;
         }
     }
     pendingValues.length = 0;
 }
 
-public final function StoreSinglePistolValues()
+private final function StoreSinglePistolValues()
 {
-    local int i;
-    i = 0;
+    local int       i;
+    local KFWeapon  nextWeapon;
     while (i < storedValues.length)
     {
-        if (storedValues[i].reference == none)
+        nextWeapon = KFWeapon(storedValues[i].reference.Get());
+        if (nextWeapon == none)
         {
+            storedValues[i].reference.FreeSelf();
+            storedValues[i].owner.FreeSelf();
             storedValues.Remove(i, 1);
             continue;
         }
-        storedValues[i].owner = storedValues[i].reference.instigator;
-        storedValues[i].value = storedValues[i].reference.sellValue;
+        storedValues[i].owner.Set(nextWeapon.instigator);
+        storedValues[i].value = nextWeapon.sellValue;
         i += 1;
     }
 }
 
-event Tick(float delta)
+private function Tick(float delta, float timeDilationCoefficient)
 {
     ApplyPendingValues();
     StoreSinglePistolValues();

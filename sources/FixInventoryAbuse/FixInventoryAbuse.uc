@@ -35,6 +35,8 @@ class FixInventoryAbuse extends Feature
 //  do this check too often.
 var private config const float checkInterval;
 
+var private Timer checkTimer;
+
 struct DualiesPair
 {
     var class<KFWeaponPickup>   single;
@@ -52,12 +54,13 @@ protected function OnEnabled()
     if (actualInterval <= 0) {
         actualInterval = 0.25;
     }
-    SetTimer(actualInterval, true);
+    checkTimer = _.time.StartTimer(actualInterval, true);
+    checkTimer.OnElapsed(self).connect = Timer;
 }
 
 protected function OnDisabled()
 {
-    SetTimer(0.0f, false);
+    _.memory.Free(checkTimer);
 }
 
 //  Did player with this controller contribute to the latest dosh generation?
@@ -84,7 +87,7 @@ private final function class<KFWeaponPickup> GetRootPickupClass(KFWeapon weapon)
     if (weapon == none) return none;
     //  Start with a pickup of the given weapons
     root = class<KFWeaponPickup>(weapon.default.pickupClass);
-    if (root == none) return none;
+    if (root == none)   return none;
 
     //      In case it's a dual version - find corresponding single pickup class
     //  (it's root would be the same).
@@ -181,13 +184,12 @@ private final function DropEverything(KFHumanPawn playerPawn)
         weaponList[weaponList.length] = nextWeapon;
     }
     //  And destroy them later.
-    for(i = 0; i < weaponList.length; i += 1)
-    {
+    for(i = 0; i < weaponList.length; i += 1) {
         DropWeapon(weaponList[i]);
     }
 }
 
-event Timer()
+private function Timer(Timer source)
 {
     local int                                   i;
     local KFHumanPawn                           nextPawn;

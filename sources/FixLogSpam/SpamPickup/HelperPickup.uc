@@ -72,12 +72,12 @@ class HelperPickup extends AcediaObject
  */
 
 //  For easy access in relevant `GameRules` and mutator event listener.
-var private HelperPickup            singletonInstance;
+var private HelperPickup    singletonInstance;
 //  Already fixed pickups that we periodically "refix".
-var private array<KFWeaponPickup>   recordedPickups;
+var private array<NativeActorRef> recordedPickups;
 //      Pickups that will get `bDropped` flag checked the next tick to
 //  determine if we need to fix them.
-var private array<KFWeaponPickup>   pendingPickups;
+var private array<NativeActorRef> pendingPickups;
 
 protected function Constructor()
 {
@@ -88,7 +88,7 @@ protected function Constructor()
     }
     //  To detect when player tries to pick something up
     //  (and force additional pickup fix update)
-    _.unreal.AddGameRules(class'PickupSpamRule');
+    _.unreal.gameRules.OnOverridePickupQuery(self).connect = PickupQuery;
     //  To detect newly spawned pickups
     class'MutatorListener_FixLogSpam_Pickup'.static.SetActive(true);
     //      Find all `KFWeaponPickup`s laying around on the map,
@@ -99,22 +99,26 @@ protected function Constructor()
     //  kind of pickup.
     level = _.unreal.GetLevel();
     foreach level.DynamicActors(class'KFMod.KFWeaponPickup', nextPickup) {
-        pendingPickups[pendingPickups.length] = nextPickup;
+        pendingPickups[pendingPickups.length] = _.unreal.ActorRef(nextPickup);
     }
 }
 
 protected function Finalizer()
 {
-    local int i;
+    local int               i;
+    local KFWeaponPickup    nextPickup;
     for (i = 0; i < recordedPickups.length; i += 1)
     {
-        if (recordedPickups[i] != none && !recordedPickups[i].bPendingDelete) {
+        nextPickup = KFWeaponPickup(recordedPickups[i].Get());
+        if (nextPickup != none) {
             recordedPickups[i].Enable('Destroyed');
         }
     }
+    _.memory.FreeMany(recordedPickups);
+    _.memory.FreeMany(pendingPickups);
     recordedPickups.length = 0;
     pendingPickups.length = 0;
-    _.unreal.RemoveGameRules(class'PickupSpamRule');
+    _.unreal.gameRules.OnOverridePickupQuery(self).Disconnect();
     class'MutatorListener_FixLogSpam_Pickup'.static.SetActive(false);
 }
 
@@ -128,19 +132,22 @@ public final static function HelperPickup GetInstance()
 //      `none` is never recorded.
 private final function bool IsPickupRecorded(KFWeaponPickup pickupToCheck)
 {
-    local int i;
+    local int               i;
+    local KFWeaponPickup    nextPickup;
     if (pickupToCheck == none) {
         return false;
     }
     for (i = 0; i < recordedPickups.length; i += 1)
     {
-        if (recordedPickups[i] == pickupToCheck) {
+        nextPickup = KFWeaponPickup(recordedPickups[i].Get());
+        if (nextPickup == pickupToCheck) {
             return true;
         }
     }
     for (i = 0; i < pendingPickups.length; i += 1)
     {
-        if (pendingPickups[i] == pickupToCheck) {
+        nextPickup = KFWeaponPickup(pendingPickups[i].Get());
+        if (nextPickup == pickupToCheck) {
             return true;
         }
     }
@@ -154,7 +161,9 @@ private final function CleanRecordedPickups()
     local int i;
     while (i < recordedPickups.length)
     {
-        if (recordedPickups[i] == none) {
+        if (recordedPickups[i].Get() == none)
+        {
+            recordedPickups[i].FreeSelf();
             recordedPickups.Remove(i, 1);
         }
         else {
@@ -173,33 +182,45 @@ public final function HandlePickup(KFWeaponPickup newPickup)
     if (newPickup.instigator != none)
     {
         newPickup.Disable('Destroyed');
-        recordedPickups[recordedPickups.length] = newPickup;
+        recordedPickups[recordedPickups.length] = _.unreal.ActorRef(newPickup);
     }
     else {
-        pendingPickups[pendingPickups.length] = newPickup;
+        pendingPickups[pendingPickups.length] = _.unreal.ActorRef(newPickup);
     }
 }
 
 //  Re-disables `Destroyed()` event for all recorded (confirmed) dropped pickups
 //  and processes all pending (for the check if they are dropped) pickups.
-public final function UpdatePickups()
+private final function UpdatePickups()
 {
-    local int i;
+    local int               i;
+    local KFWeaponPickup    nextPickup;
     for (i = 0; i < recordedPickups.length; i += 1)
     {
-        if (recordedPickups[i] != none) {
-            recordedPickups[i].Disable('Destroyed');
+        nextPickup = KFWeaponPickup(recordedPickups[i].Get());
+        if (nextPickup != none) {
+            nextPickup.Disable('Destroyed');
         }
     }
     for (i = 0; i < pendingPickups.length; i += 1)
     {
-        if (pendingPickups[i].bDropped)
-        {
-            pendingPickups[i].Disable('Destroyed');
-            recordedPickups[recordedPickups.length] = pendingPickups[i];
-        }
+        nextPickup = KFWeaponPickup(pendingPickups[i].Get());
+        if (nextPickup == none)     continue;
+        if (nextPickup.bDropped)    continue;
+
+        nextPickup.Disable('Destroyed');
+        recordedPickups[recordedPickups.length] = pendingPickups[i];
     }
     pendingPickups.length = 0;
+}
+
+function bool PickupQuery(
+    Pawn        toucher,
+    Pickup      touchedPickup,
+    out byte    allowPickup)
+{
+    UpdatePickups();
+    return false;
 }
 
 public final function Tick()

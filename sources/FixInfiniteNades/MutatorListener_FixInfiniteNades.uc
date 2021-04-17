@@ -26,7 +26,8 @@ static function bool CheckReplacement(Actor other, out byte isSuperRelevant)
     local Frag              relevantFrag;
     local FixInfiniteNades  nadeFix;
     nadeFix = FixInfiniteNades(class'FixInfiniteNades'.static.GetInstance());
-    if (nadeFix == none) return true;
+    if (nadeFix == none)            return true;
+    if (nadeFix.IsShuttingDown())   return true;
 
     //  Handle detecting new frag (weapons that allows to throw nades)
     relevantFrag = Frag(other);

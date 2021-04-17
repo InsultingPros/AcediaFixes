@@ -155,7 +155,8 @@ static function MoveImpactDamage(
     newProjectileAsHarpoon = SealSquealProjectile(newProjectile);
     if (oldProjectileAsHarpoon != none && newProjectileAsHarpoon != none)
     {
-        newProjectileAsHarpoon.impactDamage = oldProjectileAsHarpoon.impactDamage;
+        newProjectileAsHarpoon.impactDamage =
+            oldProjectileAsHarpoon.impactDamage;
         oldProjectileAsHarpoon.impactDamage = 0;
         return;
     }

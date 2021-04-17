@@ -51,20 +51,28 @@ class FixInfiniteNades extends Feature
 //  so if you wish to prevent it, keep this flag set to `false`.
 var private config const bool ignoreTossFlags;
 
+//  Set to `true` when this fix is getting disabled to avoid replacing the
+//  fire class again.
+var private bool shuttingDown;
+
 //  Records how much ammo given frag grenade (`Frag`) has.
 struct FragAmmoRecord
 {
-    var public Frag fragReference;
-    var public int  amount;
+    //  Reference to `Frag`
+    var public NativeActorRef   fragReference;
+    var public int              amount;
 };
 var private array<FragAmmoRecord> ammoRecords;
 
 protected function OnEnabled()
 {
-    local Frag nextFrag;
+    local Frag      nextFrag;
+    local LevelInfo level;
+    level = _.unreal.GetLevel();
+    _.unreal.OnTick(self).connect = Tick;
+    shuttingDown = false;
     //  Find all frags, that spawned when this fix wasn't running.
-    foreach level.DynamicActors(class'KFMod.Frag', nextFrag)
-    {
+    foreach level.DynamicActors(class'KFMod.Frag', nextFrag) {
         RegisterFrag(nextFrag);
     }
     RecreateFrags();
@@ -72,8 +80,17 @@ protected function OnEnabled()
 
 protected function OnDisabled()
 {
+    _.unreal.OnTick(self).Disconnect();
+    shuttingDown = true;
     RecreateFrags();
     ammoRecords.length = 0;
+}
+
+//  Returns `true` when this feature is in the process of shutting down,
+//  which means nades' fire class should not be replaced.
+public final function bool IsShuttingDown()
+{
+    return shuttingDown;
 }
 
 //  Returns index of the connection corresponding to the given controller.
@@ -86,8 +103,7 @@ private final function int GetAmmoIndex(Frag fragToCheck)
 
     for (i = 0; i < ammoRecords.length; i += 1)
     {
-        if (ammoRecords[i].fragReference == fragToCheck)
-        {
+        if (ammoRecords[i].fragReference.Get() == fragToCheck) {
             return i;
         }
     }
@@ -99,18 +115,20 @@ private final function RecreateFrags()
 {
     local int                   i;
     local float                 maxAmmo, currentAmmo;
-    local Frag                  newFrag;
+    local Frag                  newFrag, oldFrag;
     local Pawn                  fragOwner;
     local array<FragAmmoRecord> oldRecords;
     oldRecords = ammoRecords;
     for (i = 0; i < oldRecords.length; i += 1)
     {
         //  Check if we even need to recreate that instance of `Frag`
-        if (oldRecords[i].fragReference == none) continue;
-        fragOwner = oldRecords[i].fragReference.instigator;
-        if (fragOwner == none) continue;
+        oldFrag = Frag(oldRecords[i].fragReference.Get());
+        oldRecords[i].fragReference.FreeSelf();
+        if (oldFrag == none)    continue;
+        fragOwner = oldFrag.instigator;
+        if (fragOwner == none)  continue;
         //  Recreate
-        oldRecords[i].fragReference.Destroy();
+        oldFrag.Destroy();
         fragOwner.CreateInventory("KFMod.Frag");
         newFrag = GetPawnFrag(fragOwner);
         //  Restore ammo amount
@@ -132,8 +150,7 @@ static private final function Frag GetPawnFrag(Pawn pawnWithFrag)
     while (invIter != none)
     {
         foundFrag = Frag(invIter);
-        if (foundFrag != none)
-        {
+        if (foundFrag != none) {
             return foundFrag;
         }
         invIter = invIter.inventory;
@@ -160,7 +177,7 @@ public final function RegisterFrag(Frag newFrag)
     index = GetAmmoIndex(newFrag);
     if (index >= 0) return;
 
-    newRecord.fragReference = newFrag;
+    newRecord.fragReference = _.unreal.ActorRef(newFrag);
     newRecord.amount = GetFragAmmo(newFrag);
     ammoRecords[ammoRecords.length] = newRecord;
 }
@@ -207,20 +224,22 @@ private final function ReduceGrenades(Frag relevantFrag)
     ammoRecords[index].amount -= 1;
 }
 
-event Tick(float delta)
+private function Tick(float delta, float timeDilationCoefficient)
 {
-    local int i;
+    local int   i;
+    local Frag  nextFrag;
     //  Update our ammo records with current, correct data.
-    i = 0;
     while (i < ammoRecords.length)
     {
-        if (ammoRecords[i].fragReference != none)
+        nextFrag = Frag(ammoRecords[i].fragReference.Get());
+        if (nextFrag != none)
         {
-            ammoRecords[i].amount = GetFragAmmo(ammoRecords[i].fragReference);
+            ammoRecords[i].amount = GetFragAmmo(nextFrag);
             i += 1;
         }
         else
         {
+            ammoRecords[i].fragReference.FreeSelf();
             ammoRecords.Remove(i, 1);
         }
     }

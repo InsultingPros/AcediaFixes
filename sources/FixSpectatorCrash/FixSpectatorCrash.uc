@@ -70,8 +70,9 @@ var private config const bool   allowServerBlock;
 //  spectator change per player.
 struct CooldownRecord
 {
-    var PlayerController    player;
-    var float               cooldown;
+    //  Reference to `PlayerController`
+    var NativeActorRef  player;
+    var float           cooldown;
 };
 
 //  Currently active cooldowns
@@ -81,7 +82,8 @@ var private array<CooldownRecord> currentCooldowns;
 //  were marked for disconnecting.
 //      We'll be maintaining server block as long as even one
 //  of them hasn't yet disconnected.
-var private array<PlayerController> violators;
+//      References to `PlayerController`s.
+var private array<NativeActorRef> violators;
 
 //  Is server currently blocked?
 var private bool    becomingActiveBlocked;
@@ -95,6 +97,16 @@ var private bool    becomingActiveBlocked;
 //  compatibility on it's own.
 var private int     recordedNumPlayersMod;
 
+protected function OnEnabled()
+{
+    _.unreal.OnTick(self).connect = Tick;
+}
+
+protected function OnDisabled()
+{
+    _.unreal.OnTick(self).Disconnect();
+}
+
 //      If given `PlayerController` is registered in our cooldown records, -
 //  returns it's index.
 //      If it doesn't exists (or `none` value was passes), - returns `-1`.
@@ -105,7 +117,7 @@ private final function int GetCooldownIndex(PlayerController player)
 
     for (i = 0; i < currentCooldowns.length; i += 1)
     {
-        if (currentCooldowns[i].player == player) {
+        if (currentCooldowns[i].player.Get() == player) {
             return i;
         }
     }
@@ -121,7 +133,7 @@ public final function bool IsViolator(PlayerController player)
 
     for (i = 0; i < violators.length; i += 1)
     {
-        if (violators[i] == player) {
+        if (violators[i].Get() == player) {
             return true;
         }
     }
@@ -142,8 +154,8 @@ public final function NotifyStatusChange(PlayerController player)
     if (index >= 0)
     {
         player.Destroy();
+        violators[violators.length] = currentCooldowns[index].player;
         currentCooldowns.Remove(index, 1);
-        violators[violators.length] = player;
         if (allowServerBlock) {
             SetBlock(true);
         }
@@ -153,7 +165,7 @@ public final function NotifyStatusChange(PlayerController player)
     //  or didn't recently change their status (put them on cooldown).
     else if (!IsViolator(player))
     {
-        newRecord.player    = player;
+        newRecord.player    = _.unreal.ActorRef(player);
         newRecord.cooldown  = spectatorChangeTimeout;
         currentCooldowns[currentCooldowns.length] = newRecord;
     }
@@ -167,11 +179,9 @@ private final function SetBlock(bool activateBlock)
     //  Do we even need to do anything?
     if (!allowServerBlock)                      return;
     if (activateBlock == becomingActiveBlocked) return;
-    //  Only works with `KFGameType` and it's children.
-    if (level != none) kfGameType = KFGameType(level.game);
-    if (kfGameType == none)                     return;
 
     //  Actually block/unblock
+    kfGameType = _.unreal.GetKFGameType();
     becomingActiveBlocked = activateBlock;
     if (activateBlock)
     {
@@ -198,10 +208,12 @@ private final function TryUnblocking()
 
     for (i = 0; i < violators.length; i += 1)
     {
-        if (violators[i] != none) {
+        if (violators[i].Get() != none) {
             return;
         }
     }
+    _.memory.FreeMany(violators);
+    violators.length = 0;
     SetBlock(false);
 }
 
@@ -242,10 +254,7 @@ private final function int GetRealPlayers()
 //  (difference will be equal to the amount of faked players).
 private final function int GetNumPlayersMod()
 {
-    local KFGameType kfGameType;
-    if (level != none) kfGameType = KFGameType(level.game);
-    if (kfGameType == none) return 0;
-    return kfGameType.numPlayers - GetRealPlayers();
+    return _.unreal.GetKFGameType().numPlayers - GetRealPlayers();
 }
 
 private final function ReduceCooldowns(float timePassed)
@@ -255,22 +264,23 @@ private final function ReduceCooldowns(float timePassed)
     while (i < currentCooldowns.length)
     {
         currentCooldowns[i].cooldown -= timePassed;
-        if (    currentCooldowns[i].player != none
+        if (    currentCooldowns[i].player.Get() != none
             &&  currentCooldowns[i].cooldown > 0.0)
         {
             i += 1;
         }
         else
         {
+            currentCooldowns[i].player.FreeSelf();
             currentCooldowns.Remove(i, 1);
         }
     }
 }
 
-event Tick(float delta)
+private function Tick(float delta, float tileDilationCoefficient)
 {
     local float trueTimePassed;
-    trueTimePassed = delta * (1.1 / level.timeDilation);
+    trueTimePassed = delta / tileDilationCoefficient;
     TryUnblocking();
     ReduceCooldowns(trueTimePassed);
 }

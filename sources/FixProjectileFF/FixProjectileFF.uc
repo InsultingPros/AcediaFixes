@@ -134,16 +134,12 @@ public final static function class<ROBallisticProjectile> FindFixedClass(
 //      If `FixProjectileFF` in disabled always returns `false`.
 public final static function bool IsFriendlyFireAcceptable()
 {
-    local TeamGame          gameType;
-    local FixProjectileFF   projectileFFFix;
+    local FixProjectileFF projectileFFFix;
     projectileFFFix = FixProjectileFF(GetInstance());
     if (projectileFFFix == none)            return false;
     if (projectileFFFix.ignoreFriendlyFire) return false;
-    if (projectileFFFix.level == none)      return false;
-    gameType = TeamGame(projectileFFFix.level.game);
-    if (gameType == none)                   return false;
 
-    return gameType.friendlyFireScale > 0;
+    return __().unreal.GetKFGameType().friendlyFireScale > 0;
 }
 
 defaultproperties
