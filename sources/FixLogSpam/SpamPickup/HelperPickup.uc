@@ -18,8 +18,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Acedia.  If not, see <https://www.gnu.org/licenses/>.
  */
-class HelperPickup extends AcediaObject
-    config(AcediaFixes);
+class HelperPickup extends AcediaObject;
 
 /**
  *      `KFWeaponPickup` class is responsible for spamming log with
@@ -90,7 +89,9 @@ protected function Constructor()
     //  (and force additional pickup fix update)
     _.unreal.gameRules.OnOverridePickupQuery(self).connect = PickupQuery;
     //  To detect newly spawned pickups
-    class'MutatorListener_FixLogSpam_Pickup'.static.SetActive(true);
+    _.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
+    //  For updating pickups as soon as possible
+    _.unreal.OnTick(self).connect = Tick;
     //      Find all `KFWeaponPickup`s laying around on the map,
     //  so that we can fix preexisting ones too.
     //      But add them to pending list in a freaky case this `HealperPickup`
@@ -119,7 +120,33 @@ protected function Finalizer()
     recordedPickups.length = 0;
     pendingPickups.length = 0;
     _.unreal.gameRules.OnOverridePickupQuery(self).Disconnect();
-    class'MutatorListener_FixLogSpam_Pickup'.static.SetActive(false);
+    _.unreal.mutator.OnCheckReplacement(self).Disconnect();
+    _.unreal.OnTick(self).Disconnect();
+}
+
+function bool PickupQuery(
+    Pawn        toucher,
+    Pickup      touchedPickup,
+    out byte    allowPickup)
+{
+    UpdatePickups();
+    return false;
+}
+
+private function bool CheckReplacement(Actor other, out byte isSuperRelevant)
+{
+    local KFWeaponPickup otherPickup;
+    otherPickup = KFWeaponPickup(other);
+    if (otherPickup != none) {
+        HandlePickup(otherPickup);
+    }
+    return true;
+}
+
+private function Tick(float delta, float timeDilationCoefficient)
+{
+    CleanRecordedPickups();
+    UpdatePickups();
 }
 
 public final static function HelperPickup GetInstance()
@@ -212,21 +239,6 @@ private final function UpdatePickups()
         recordedPickups[recordedPickups.length] = pendingPickups[i];
     }
     pendingPickups.length = 0;
-}
-
-function bool PickupQuery(
-    Pawn        toucher,
-    Pickup      touchedPickup,
-    out byte    allowPickup)
-{
-    UpdatePickups();
-    return false;
-}
-
-public final function Tick()
-{
-    CleanRecordedPickups();
-    UpdatePickups();
 }
 
 defaultproperties

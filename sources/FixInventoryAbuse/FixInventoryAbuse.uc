@@ -1,16 +1,6 @@
 /**
- *      This feature addressed two inventory issues:
- *      1.  Players carrying amount of weapons that shouldn't be allowed by the
- *      weight limit.
- *      2.  Players carrying two variants of the same gun.
- *      For example carrying both M32 and camo M32.
- *      Single and dual version of the same weapon are also considered
- *      the same gun, so you can't carry both MK23 and dual MK23 or
- *      dual handcannons and golden handcannon.
- *
- *      It fixes them by doing repeated checks to find violations of those rules
- *      and destroys all droppable weapons of people that use this exploit.
- *      Copyright 2020 Anton Tarasenko
+ *      Config object for `FixInventoryAbuse_Feature`.
+ *      Copyright 2021 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -27,192 +17,91 @@
  * You should have received a copy of the GNU General Public License
  * along with Acedia.  If not, see <https://www.gnu.org/licenses/>.
  */
-class FixInventoryAbuse extends Feature
-    config(AcediaFixes);
+class FixInventoryAbuse extends FeatureConfig
+    perobjectconfig
+    config(AcediaFixes)
+    dependson(FixInventoryAbuse_Feature);
 
-//      How often (in seconds) should we do our inventory validations?
-//      We shouldn't really worry about performance, but there's also no need to
-//  do this check too often.
-var private config const float checkInterval;
+var public config float                                         checkInterval;
+var public config array<FixInventoryAbuse_Feature.DualiesPair>  dualiesClasses;
 
-var private Timer checkTimer;
-
-struct DualiesPair
-{
-    var class<KFWeaponPickup>   single;
-    var class<KFWeaponPickup>   dual;
-};
-//      For this fix to properly work, this array must contain an entry for
-//  every dual weapon in the game (like pistols, with single and dual versions).
-//  It's made configurable in case of custom dual weapons.
-var private config const array<DualiesPair> dualiesClasses;
-
-protected function OnEnabled()
-{
-    local float actualInterval;
-    actualInterval = checkInterval;
-    if (actualInterval <= 0) {
-        actualInterval = 0.25;
-    }
-    checkTimer = _.time.StartTimer(actualInterval, true);
-    checkTimer.OnElapsed(self).connect = Timer;
-}
-
-protected function OnDisabled()
-{
-    _.memory.Free(checkTimer);
-}
-
-//  Did player with this controller contribute to the latest dosh generation?
-private final function bool IsWeightLimitViolated(KFHumanPawn playerPawn)
-{
-    if (playerPawn == none) return false;
-    return (playerPawn.currentWeight > playerPawn.maxCarryWeight);
-}
-
-//      Returns a root pickup class.
-//  For non-dual weapons, root class is defined as either:
-//      1. the first variant (reskin), if there are variants for that weapon;
-//      2. and as the class itself, if there are no variants.
-//  For dual weapons (all dual pistols) root class is defined as
-//  a root of their single version.
-//      This definition is useful because:
-//      ~ Vanilla game rules are such that player can only have two weapons
-//      in the inventory if they have different roots;
-//      ~ Root is easy to find.
-private final function class<KFWeaponPickup> GetRootPickupClass(KFWeapon weapon)
-{
-    local int                   i;
-    local class<KFWeaponPickup> root;
-    if (weapon == none) return none;
-    //  Start with a pickup of the given weapons
-    root = class<KFWeaponPickup>(weapon.default.pickupClass);
-    if (root == none)   return none;
-
-    //      In case it's a dual version - find corresponding single pickup class
-    //  (it's root would be the same).
-    for (i = 0; i < dualiesClasses.length; i += 1)
-    {
-        if (dualiesClasses[i].dual == root)
-        {
-            root = dualiesClasses[i].single;
-            break;
-        }
-    }
-    //      Take either first variant class or the class itself, -
-    //  it's going to be root by definition.
-    if (root.default.variantClasses.length > 0)
-    {
-        root = class<KFWeaponPickup>(root.default.variantClasses[0]);
-    }
-    return root;
-}
-
-//      Returns `true` if passed pawn has two weapons that are just variants of
-//  each other (they have the same root, see `GetRootPickupClass()`).
-private final function bool HasDuplicateGuns(KFHumanPawn playerPawn)
-{
-    local int                       i, j;
-    local Inventory                 inv;
-    local KFWeapon                  nextWeapon;
-    local class<KFWeaponPickup>     rootClass;
-    local array< class<Pickup> >    rootList;
-    if (playerPawn == none) return false;
-
-    //  First find a root for every weapon in the pawn's inventory.
-    for (inv = playerPawn.inventory; inv != none; inv = inv.inventory)
-    {
-        nextWeapon = KFWeapon(inv);
-        if (nextWeapon == none)         continue;
-        if (nextWeapon.bKFNeverThrow)   continue;
-        rootClass = GetRootPickupClass(nextWeapon);
-        if (rootClass != none) {
-            rootList[rootList.length] = rootClass;
-        }
-    }
-    //  Then just check obtained roots for duplicates.
-    for (i = 0; i < rootList.length; i += 1)
-    {
-        for (j = i + 1; j < rootList.length; j += 1)
-        {
-            if (rootList[i] == rootList[j]) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-private final function Vector DropWeapon(KFWeapon weaponToDrop)
-{
-    local Vector        x, y, z;
-    local Vector        weaponVelocity;
-    local Vector        dropLocation;
-    local KFHumanPawn   playerPawn;
-    if (weaponToDrop == none)   return Vect(0, 0, 0);
-    playerPawn = KFHumanPawn(weaponToDrop.instigator);
-    if (playerPawn == none)     return Vect(0, 0, 0);
-
-    //  Calculations from `PlayerController.ServerThrowWeapon()`
-    weaponVelocity = Vector(playerPawn.GetViewRotation());
-    weaponVelocity *= (playerPawn.velocity dot weaponVelocity) + 150;
-    weaponVelocity += Vect(0, 0, 100);
-    //  Calculations from `Pawn.TossWeapon()`
-    GetAxes(playerPawn.rotation, x, y, z);
-    dropLocation = playerPawn.location + 0.8 * playerPawn.collisionRadius * x -
-        0.5 * playerPawn.collisionRadius * y;
-    //  Do the drop
-    weaponToDrop.velocity = weaponVelocity;
-    weaponToDrop.DropFrom(dropLocation);
-}
-
-//  Kill the gun devil!
-private final function DropEverything(KFHumanPawn playerPawn)
+protected function AssociativeArray ToData()
 {
     local int               i;
-    local Inventory         inv;
-    local KFWeapon          nextWeapon;
-    local array<KFWeapon>   weaponList;
-    if (playerPawn == none) return;
-    //      Going through the linked list while removing items can be tricky,
-    //  so just find all weapons first.
-    for (inv = playerPawn.inventory; inv != none; inv = inv.inventory)
+    local DynamicArray      pairsArray;
+    local AssociativeArray  data, pair;
+    data = _.collections.EmptyAssociativeArray();
+    data.SetFloat(P("checkInterval"), checkInterval, true);
+    pairsArray = _.collections.EmptyDynamicArray();
+    for (i = 0; i < dualiesClasses.length; i += 1)
     {
-        nextWeapon = KFWeapon(inv);
-        if (nextWeapon == none)         continue;
-        if (nextWeapon.bKFNeverThrow)   continue;
-        weaponList[weaponList.length] = nextWeapon;
+        pair = _.collections.EmptyAssociativeArray();
+        pair.SetItem(   P("single"),
+                        _.text.FromString(string(dualiesClasses[i].single)));
+        pair.SetItem(   P("dual"),
+                        _.text.FromString(string(dualiesClasses[i].dual)));
+        pairsArray.AddItem(pair);
     }
-    //  And destroy them later.
-    for(i = 0; i < weaponList.length; i += 1) {
-        DropWeapon(weaponList[i]);
+    data.SetItem(P("dualiesClasses"), pairsArray);
+    return data;
+}
+
+protected function FromData(AssociativeArray source)
+{
+    local int                                   i;
+    local DynamicArray                          pairsArray;
+    local AssociativeArray                      loadedPair;
+    local FixInventoryAbuse_Feature.DualiesPair newPair;
+    if (source == none) {
+        return;
+    }
+    checkInterval = source.GetFloat(P("checkInterval"), 0.25);
+    pairsArray = source.GetDynamicArray(P("dualiesClasses"));
+    dualiesClasses.length = 0;
+    if (pairsArray == none) {
+        return;
+    }
+    for (i = 0; i < pairsArray.GetLength(); i += 1)
+    {
+        loadedPair = pairsArray.GetAssociativeArray(i);
+        if (loadedPair == none) continue;
+
+        newPair.single = class<KFWeaponPickup>(
+            _.memory.LoadClass(loadedPair.GetText(P("single"))) );
+        newPair.dual = class<KFWeaponPickup>(
+            _.memory.LoadClass(loadedPair.GetText(P("dual"))) );
+        dualiesClasses[dualiesClasses.length] = newPair;
     }
 }
 
-private function Timer(Timer source)
+protected function DefaultIt()
 {
-    local int                                   i;
-    local KFHumanPawn                           nextPawn;
-    local ConnectionService                     service;
-    local array<ConnectionService.Connection>   connections;
-    service = ConnectionService(class'ConnectionService'.static.GetInstance());
-    if (service == none) return;
-
-    connections = service.GetActiveConnections();
-    for (i = 0; i < connections.length; i += 1)
-    {
-        nextPawn = none;
-        if (connections[i].controllerReference != none) {
-            nextPawn = KFHumanPawn(connections[i].controllerReference.pawn);
-        }
-        if (IsWeightLimitViolated(nextPawn) || HasDuplicateGuns(nextPawn)) {
-            DropEverything(nextPawn);
-        }
-    }
+    local FixInventoryAbuse_Feature.DualiesPair newPair;
+    checkInterval = 0.25;
+    dualiesClasses.length = 0;
+    newPair.single  = class'KFMod.SinglePickup';
+    newPair.dual    = class'KFMod.DualiesPickup';
+    dualiesClasses[dualiesClasses.length] = newPair;
+    newPair.single  = class'KFMod.Magnum44Pickup';
+    newPair.dual    = class'KFMod.Dual44MagnumPickup';
+    dualiesClasses[dualiesClasses.length] = newPair;
+    newPair.single  = class'KFMod.MK23Pickup';
+    newPair.dual    = class'KFMod.DualMK23Pickup';
+    dualiesClasses[dualiesClasses.length] = newPair;
+    newPair.single  = class'KFMod.DeaglePickup';
+    newPair.dual    = class'KFMod.DualDeaglePickup';
+    dualiesClasses[dualiesClasses.length] = newPair;
+    newPair.single  = class'KFMod.GoldenDeaglePickup';
+    newPair.dual    = class'KFMod.GoldenDualDeaglePickup';
+    dualiesClasses[dualiesClasses.length] = newPair;
+    newPair.single  = class'KFMod.FlareRevolverPickup';
+    newPair.dual    = class'KFMod.DualFlareRevolverPickup';
+    dualiesClasses[dualiesClasses.length] = newPair;
 }
 
 defaultproperties
 {
+    configName = "AcediaFixes"
     checkInterval = 0.25
     dualiesClasses(0)=(single=class'KFMod.SinglePickup',dual=class'KFMod.DualiesPickup')
     dualiesClasses(1)=(single=class'KFMod.Magnum44Pickup',dual=class'KFMod.Dual44MagnumPickup')

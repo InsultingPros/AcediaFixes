@@ -22,15 +22,15 @@
 
 defaultproperties
 {
-    features(0)     = class'FixZedTimeLags'
-    features(1)     = class'FixDoshSpam'
-    features(2)     = class'FixFFHack'
-    features(3)     = class'FixInfiniteNades'
-    features(4)     = class'FixAmmoSelling'
-    features(5)     = class'FixSpectatorCrash'
-    features(6)     = class'FixDualiesCost'
-    features(7)     = class'FixInventoryAbuse'
-    features(8)     = class'FixProjectileFF'
-    features(9)     = class'FixPipes'
-    features(10)    = class'FixLogSpam'
+    features(0)     = class'FixZedTimeLags_Feature'
+    features(1)     = class'FixDoshSpam_Feature'
+    features(2)     = class'FixFFHack_Feature'
+    features(3)     = class'FixInfiniteNades_Feature'
+    features(4)     = class'FixAmmoSelling_Feature'
+    features(5)     = class'FixSpectatorCrash_Feature'
+    features(6)     = class'FixDualiesCost_Feature'
+    features(7)     = class'FixInventoryAbuse_Feature'
+    features(8)     = class'FixProjectileFF_Feature'
+    features(9)     = class'FixPipes_Feature'
+    features(10)    = class'FixLogSpam_Feature'
 }

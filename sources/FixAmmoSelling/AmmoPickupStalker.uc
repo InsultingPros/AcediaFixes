@@ -51,13 +51,14 @@ public final static function StalkAmmoPickup(KFAmmoPickup newTarget)
 
 event Touch(Actor other)
 {
-    local FixAmmoSelling ammoSellingFix;
+    local FixAmmoSelling_Feature ammoSellingFix;
     if (target == none)                             return;
     //      If our box was sleeping for while (more than a tick), -
     //  player couldn't have gotten any ammo.
     if (!wasActive && !target.IsInState('Pickup'))  return;
 
-    ammoSellingFix = FixAmmoSelling(class'FixAmmoSelling'.static.GetInstance());
+    ammoSellingFix = FixAmmoSelling_Feature(
+        class'FixAmmoSelling_Feature'.static.GetInstance());
     if (ammoSellingFix != none) {
         ammoSellingFix.RecordAmmoPickup(Pawn(other), target);
     }

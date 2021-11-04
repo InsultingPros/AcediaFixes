@@ -18,14 +18,14 @@
  * along with Acedia.  If not, see <https://www.gnu.org/licenses/>.
  */
 class FixAmmoSellingService extends FeatureService
-    dependson(FixAmmoSelling);
+    dependson(FixAmmoSelling_Feature);
 
-var private FixAmmoSelling ammoSellingFix;
+var private FixAmmoSelling_Feature ammoSellingFix;
 
 //      All weapons we've detected so far.
 //      Made `public` to avoid needless calls, since this is not part of
 //  a library's interface anyway.
-var public array<FixAmmoSelling.WeaponRecord> registeredWeapons; 
+var public array<FixAmmoSelling_Feature.WeaponRecord> registeredWeapons; 
 
 protected function Finalizer()
 {
@@ -35,7 +35,7 @@ protected function Finalizer()
 public function SetOwnerFeature(Feature newOwnerFeature)
 {
     super.SetOwnerFeature(newOwnerFeature);
-    ammoSellingFix = FixAmmoSelling(newOwnerFeature);
+    ammoSellingFix = FixAmmoSelling_Feature(newOwnerFeature);
 }
 
 event Tick(float delta)

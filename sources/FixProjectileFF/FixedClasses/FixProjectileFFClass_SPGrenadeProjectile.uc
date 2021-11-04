@@ -44,7 +44,7 @@ public function TakeDamage(
     }
     canTakeThisDamage =
             (instigatedBy == instigator)
-        ||  class'FixProjectileFF'.static.IsFriendlyFireAcceptable();
+        ||  class'FixProjectileFF_Feature'.static.IsFriendlyFireAcceptable();
     //  Unlike M79/M32 - no `!bDud` check, since it's supposed to fall down
     if (canTakeThisDamage)
     {

@@ -1,16 +1,5 @@
 /**
- *      This feature fixes different instances of log spam by the killing floor
- *  with various warnings and errors. Some of them have actual underlying bugs
- *  that need to be fixed, but a lot seem to be just a byproduct of dead and
- *  abandoned features or simple negligence.
- *      Whatever the case, now that TWI will no longer make any new changes to
- *  the game a lot of them do not serve any purpose and simply pollute
- *  log files. We try to get rid of at least some of them.
- *      Since changes we make do not actually have gameplay effect and
- *  are more aimed at convenience of server owners, our philosophy with the
- *  changes will be to avoid solutions that are way too "hacky" and prefer some
- *  message spam getting through to the possibility of some unexpected gameplay
- *  effects as far as vanilla game is concerned.
+ *      Config object for `FixLogSpam_Feature`.
  *      Copyright 2021 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
@@ -28,44 +17,40 @@
  * You should have received a copy of the GNU General Public License
  * along with Acedia.  If not, see <https://www.gnu.org/licenses/>.
  */
-class FixLogSpam extends Feature
+class FixLogSpam extends FeatureConfig
+    perobjectconfig
     config(AcediaFixes);
 
-//      This is responsible for fixing log spam due to picking up dropped
-//  weapons without set `inventory` variable.
-var private config const bool   fixPickupSpam;
-var private HelperPickup        helperPickupSpam;
+var public config bool fixPickupSpam;
+var public config bool fixTraderSpam;
 
-var private config const bool   fixTraderSpam;
-var private HelperTrader        helperTraderSpam;
-
-protected function OnEnabled()
+protected function AssociativeArray ToData()
 {
-    if (fixPickupSpam) {
-        helperPickupSpam = HelperPickup(_.memory.Allocate(class'HelperPickup'));
-    }
-    if (fixTraderSpam) {
-        helperTraderSpam = HelperTrader(_.memory.Allocate(class'HelperTrader'));
+    local AssociativeArray data;
+    data = __().collections.EmptyAssociativeArray();
+    data.SetBool(P("fixPickupSpam"), fixPickupSpam, true);
+    data.SetBool(P("fixTraderSpam"), fixTraderSpam, true);
+    return data;
+}
+
+protected function FromData(AssociativeArray source)
+{
+    if (source != none)
+    {
+        fixPickupSpam = source.GetBool(P("fixPickupSpam"), true);
+        fixTraderSpam = source.GetBool(P("fixTraderSpam"), true);
     }
 }
 
-protected function OnDisabled()
+protected function DefaultIt()
 {
-    _.memory.Free(helperPickupSpam);
-    helperPickupSpam = none;
-    _.memory.Free(helperTraderSpam);
-    helperTraderSpam = none;
-}
-
-public function Tick(float delta)
-{
-    if (helperPickupSpam != none) {
-        helperPickupSpam.Tick();
-    }
+    fixPickupSpam = true;
+    fixTraderSpam = true;
 }
 
 defaultproperties
 {
+    configName = "AcediaFixes"
     fixPickupSpam = true
     fixTraderSpam = true
 }

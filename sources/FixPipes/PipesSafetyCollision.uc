@@ -47,8 +47,9 @@ public final static function PipesSafetyCollision ProtectPipes(
 private function bool IsSuspicious(Pawn instigator)
 {
     //  Instigator vanished
-    if (instigator == none) return true;
-
+    if (instigator == none) {
+        return true;
+    }
     //  Instigator already became spectator
     if (KFPawn(instigator) != none)
     {
@@ -80,11 +81,11 @@ function TakeDamage(
     class<DamageType>   damageType,
     optional int        hitIndex)
 {
-    local FixPipes              pipesFix;
+    local FixPipes_Feature      pipesFix;
     local PipeBombProjectile    target;
     target = PipeBombProjectile(owner);
     if (target == none)                                                 return;
-    pipesFix = FixPipes(class'FixPipes'.static.GetInstance());
+    pipesFix = FixPipes_Feature(class'FixPipes_Feature'.static.GetInstance());
     if (pipesFix == none)                                               return;
     if (pipesFix.preventMassiveDamage && target.bTriggered)             return;
     if (pipesFix.preventSuspiciousDamage && IsSuspicious(instigator))   return;

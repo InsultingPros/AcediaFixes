@@ -37,7 +37,7 @@ function TakeDamage(
     }
     canTakeThisDamage =
             (instigatedBy == instigator)
-        ||  class'FixProjectileFF'.static.IsFriendlyFireAcceptable();
+        ||  class'FixProjectileFF_Feature'.static.IsFriendlyFireAcceptable();
     if (canTakeThisDamage && !bDud) {
         Explode(hitLocation, Vect(0, 0, 0));
     }

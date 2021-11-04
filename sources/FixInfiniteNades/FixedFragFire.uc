@@ -23,8 +23,9 @@ class FixedFragFire extends KFMod.FragFire;
 
 function DoFireEffect()
 {
-    local FixInfiniteNades nadeFix;
-    nadeFix = FixInfiniteNades(class'FixInfiniteNades'.static.GetInstance());
+    local FixInfiniteNades_Feature nadeFix;
+    nadeFix = FixInfiniteNades_Feature(
+        class'FixInfiniteNades_Feature'.static.GetInstance());
     if (nadeFix == none || nadeFix.RegisterNadeThrow(Frag(weapon))) {
         super.DoFireEffect();
     }
