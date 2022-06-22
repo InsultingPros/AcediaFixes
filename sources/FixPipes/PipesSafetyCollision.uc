@@ -85,7 +85,8 @@ function TakeDamage(
     local PipeBombProjectile    target;
     target = PipeBombProjectile(owner);
     if (target == none)                                                 return;
-    pipesFix = FixPipes_Feature(class'FixPipes_Feature'.static.GetInstance());
+    pipesFix = FixPipes_Feature(
+        class'FixPipes_Feature'.static.GetEnabledInstance());
     if (pipesFix == none)                                               return;
     if (pipesFix.preventMassiveDamage && target.bTriggered)             return;
     if (pipesFix.preventSuspiciousDamage && IsSuspicious(instigator))   return;

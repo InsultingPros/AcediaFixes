@@ -25,7 +25,7 @@ function DoFireEffect()
 {
     local FixInfiniteNades_Feature nadeFix;
     nadeFix = FixInfiniteNades_Feature(
-        class'FixInfiniteNades_Feature'.static.GetInstance());
+        class'FixInfiniteNades_Feature'.static.GetEnabledInstance());
     if (nadeFix == none || nadeFix.RegisterNadeThrow(Frag(weapon))) {
         super.DoFireEffect();
     }

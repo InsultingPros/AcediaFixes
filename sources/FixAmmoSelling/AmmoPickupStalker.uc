@@ -58,7 +58,7 @@ event Touch(Actor other)
     if (!wasActive && !target.IsInState('Pickup'))  return;
 
     ammoSellingFix = FixAmmoSelling_Feature(
-        class'FixAmmoSelling_Feature'.static.GetInstance());
+        class'FixAmmoSelling_Feature'.static.GetEnabledInstance());
     if (ammoSellingFix != none) {
         ammoSellingFix.RecordAmmoPickup(Pawn(other), target);
     }
