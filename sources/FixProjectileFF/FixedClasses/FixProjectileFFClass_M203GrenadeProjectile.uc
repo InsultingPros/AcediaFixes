@@ -30,7 +30,7 @@ function TakeDamage(
     optional int        hitIndex)
 {
     local bool canTakeThisDamage;
-    if (damageType == class'SirenScreamDamage')
+    if (class<SirenScreamDamage>(damageType) != none)
     {
         Disintegrate(hitLocation, Vect(0, 0, 1));
         return;
