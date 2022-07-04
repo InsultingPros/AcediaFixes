@@ -1,6 +1,6 @@
 /**
  *      Config object for `FixPipes_Feature`.
- *      Copyright 2021 Anton Tarasenko
+ *      Copyright 2021-2022 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -27,19 +27,19 @@ var public config bool  preventCorpseDetonation;
 var public config bool  preventNPCDetonation;
 var public config float proximityCheckElevation;
 
-protected function AssociativeArray ToData()
+protected function HashTable ToData()
 {
-    local AssociativeArray data;
-    data = __().collections.EmptyAssociativeArray();
-    data.SetBool(P("preventMassiveDamage"), preventMassiveDamage, true);
-    data.SetBool(P("preventSuspiciousDamage"), preventSuspiciousDamage, true);
-    data.SetBool(P("preventCorpseDetonation"), preventCorpseDetonation, true);
-    data.SetBool(P("preventNPCDetonation"), preventNPCDetonation, true);
-    data.SetFloat(P("proximityCheckElevation"), proximityCheckElevation, true);
+    local HashTable data;
+    data = __().collections.EmptyHashTable();
+    data.SetBool(P("preventMassiveDamage"), preventMassiveDamage);
+    data.SetBool(P("preventSuspiciousDamage"), preventSuspiciousDamage);
+    data.SetBool(P("preventCorpseDetonation"), preventCorpseDetonation);
+    data.SetBool(P("preventNPCDetonation"), preventNPCDetonation);
+    data.SetFloat(P("proximityCheckElevation"), proximityCheckElevation);
     return data;
 }
 
-protected function FromData(AssociativeArray source)
+protected function FromData(HashTable source)
 {
     if (source == none) {
         return;

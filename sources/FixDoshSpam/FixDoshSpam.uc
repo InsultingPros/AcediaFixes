@@ -1,6 +1,6 @@
 /**
  *      Config object for `FixDoshSpam_Feature`.
- *      Copyright 2021 Anton Tarasenko
+ *      Copyright 2021-2022 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -26,18 +26,18 @@ var public /*config*/ float doshPerSecondLimitMin;
 var public /*config*/ int   criticalDoshAmount;
 var public /*config*/ float checkInterval;
 
-protected function AssociativeArray ToData()
+protected function HashTable ToData()
 {
-    local AssociativeArray data;
-    data = __().collections.EmptyAssociativeArray();
-    data.SetFloat(P("doshPerSecondLimitMax"), doshPerSecondLimitMax, true);
-    data.SetFloat(P("doshPerSecondLimitMin"), doshPerSecondLimitMin, true);
-    data.SetInt(P("criticalDoshAmount"), criticalDoshAmount, true);
-    data.SetFloat(P("checkInterval"), checkInterval, true);
+    local HashTable data;
+    data = __().collections.EmptyHashTable();
+    data.SetFloat(P("doshPerSecondLimitMax"), doshPerSecondLimitMax);
+    data.SetFloat(P("doshPerSecondLimitMin"), doshPerSecondLimitMin);
+    data.SetInt(P("criticalDoshAmount"), criticalDoshAmount);
+    data.SetFloat(P("checkInterval"), checkInterval);
     return data;
 }
 
-protected function FromData(AssociativeArray source)
+protected function FromData(HashTable source)
 {
     if (source != none)
     {

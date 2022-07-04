@@ -1,6 +1,6 @@
 /**
  *      Config object for `FixInventoryAbuse_Feature`.
- *      Copyright 2021 Anton Tarasenko
+ *      Copyright 2021-2022 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -25,17 +25,17 @@ class FixInventoryAbuse extends FeatureConfig
 var public config float                                         checkInterval;
 var public config array<FixInventoryAbuse_Feature.DualiesPair>  dualiesClasses;
 
-protected function AssociativeArray ToData()
+protected function HashTable ToData()
 {
-    local int               i;
-    local DynamicArray      pairsArray;
-    local AssociativeArray  data, pair;
-    data = _.collections.EmptyAssociativeArray();
-    data.SetFloat(P("checkInterval"), checkInterval, true);
-    pairsArray = _.collections.EmptyDynamicArray();
+    local int       i;
+    local ArrayList pairsArray;
+    local HashTable data, pair;
+    data = _.collections.EmptyHashTable();
+    data.SetFloat(P("checkInterval"), checkInterval);
+    pairsArray = _.collections.EmptyArrayList();
     for (i = 0; i < dualiesClasses.length; i += 1)
     {
-        pair = _.collections.EmptyAssociativeArray();
+        pair = _.collections.EmptyHashTable();
         pair.SetItem(   P("single"),
                         _.text.FromString(string(dualiesClasses[i].single)));
         pair.SetItem(   P("dual"),
@@ -43,27 +43,28 @@ protected function AssociativeArray ToData()
         pairsArray.AddItem(pair);
     }
     data.SetItem(P("dualiesClasses"), pairsArray);
+    _.memory.Free(pairsArray);  
     return data;
 }
 
-protected function FromData(AssociativeArray source)
+protected function FromData(HashTable source)
 {
     local int                                   i;
-    local DynamicArray                          pairsArray;
-    local AssociativeArray                      loadedPair;
+    local ArrayList                             pairsArray;
+    local HashTable                             loadedPair;
     local FixInventoryAbuse_Feature.DualiesPair newPair;
     if (source == none) {
         return;
     }
     checkInterval = source.GetFloat(P("checkInterval"), 0.25);
-    pairsArray = source.GetDynamicArray(P("dualiesClasses"));
+    pairsArray = source.GetArrayList(P("dualiesClasses"));
     dualiesClasses.length = 0;
     if (pairsArray == none) {
         return;
     }
     for (i = 0; i < pairsArray.GetLength(); i += 1)
     {
-        loadedPair = pairsArray.GetAssociativeArray(i);
+        loadedPair = pairsArray.GetHashTable(i);
         if (loadedPair == none) continue;
 
         newPair.single = class<KFWeaponPickup>(
@@ -72,6 +73,7 @@ protected function FromData(AssociativeArray source)
             _.memory.LoadClass(loadedPair.GetText(P("dual"))) );
         dualiesClasses[dualiesClasses.length] = newPair;
     }
+    _.memory.Free(pairsArray);
 }
 
 protected function DefaultIt()

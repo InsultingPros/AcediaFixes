@@ -1,6 +1,6 @@
 /**
  *      Config object for `FixLogSpam_Feature`.
- *      Copyright 2021 Anton Tarasenko
+ *      Copyright 2021-2022 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -24,16 +24,16 @@ class FixLogSpam extends FeatureConfig
 var public config bool fixPickupSpam;
 var public config bool fixTraderSpam;
 
-protected function AssociativeArray ToData()
+protected function HashTable ToData()
 {
-    local AssociativeArray data;
-    data = __().collections.EmptyAssociativeArray();
-    data.SetBool(P("fixPickupSpam"), fixPickupSpam, true);
-    data.SetBool(P("fixTraderSpam"), fixTraderSpam, true);
+    local HashTable data;
+    data = __().collections.EmptyHashTable();
+    data.SetBool(P("fixPickupSpam"), fixPickupSpam);
+    data.SetBool(P("fixTraderSpam"), fixTraderSpam);
     return data;
 }
 
-protected function FromData(AssociativeArray source)
+protected function FromData(HashTable source)
 {
     if (source != none)
     {

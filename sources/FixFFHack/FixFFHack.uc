@@ -1,6 +1,6 @@
 /**
  *      Config object for `FixFFHack_Feature`.
- *      Copyright 2021 Anton Tarasenko
+ *      Copyright 2021-2022 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -25,52 +25,56 @@ var public config bool                          scaleByDefault;
 var public config array< class<DamageType> >    alwaysScale;
 var public config array< class<DamageType> >    neverScale;
 
-protected function AssociativeArray ToData()
+protected function HashTable ToData()
 {
-    local int               i;
-    local DynamicArray      damageTypeArray;
-    local AssociativeArray  data;
-    data = _.collections.EmptyAssociativeArray();
-    data.SetBool(P("scaleByDefault"), scaleByDefault, true);
-    damageTypeArray = _.collections.EmptyDynamicArray();
+    local int       i;
+    local HashTable data;
+    local ArrayList damageTypeArray;
+    data = _.collections.EmptyHashTable();
+    data.SetBool(P("scaleByDefault"), scaleByDefault);
+    damageTypeArray = _.collections.EmptyArrayList();
     for (i = 0; i < alwaysScale.length; i += 1) {
-        damageTypeArray.AddItem(_.text.FromString(string(alwaysScale[i])));
+        damageTypeArray.AddString(string(alwaysScale[i]));
     }
     data.SetItem(P("alwaysScale"), damageTypeArray);
-    damageTypeArray = _.collections.EmptyDynamicArray();
+    _.memory.Free(damageTypeArray);
+    damageTypeArray = _.collections.EmptyArrayList();
     for (i = 0; i < neverScale.length; i += 1) {
-        damageTypeArray.AddItem(_.text.FromString(string(neverScale[i])));
+        damageTypeArray.AddString(string(neverScale[i]));
     }
     data.SetItem(P("neverScale"), damageTypeArray);
+    _.memory.Free(damageTypeArray);
     return data;
 }
 
-protected function FromData(AssociativeArray source)
+protected function FromData(HashTable source)
 {
-    local int           i;
-    local DynamicArray  damageTypeArray;
+    local int       i;
+    local ArrayList damageTypeArray;
     if (source == none) {
         return;
     }
     scaleByDefault = source.GetBool(P("scaleByDefault"));
     alwaysScale.length = 0;
-    damageTypeArray = source.GetDynamicArray(P("alwaysScale"));
+    damageTypeArray = source.GetArrayList(P("alwaysScale"));
     if (damageTypeArray != none) {
         for (i = 0; i < damageTypeArray.GetLength(); i += 1)
         {
             alwaysScale[i] = class<DamageType>(
-                _.memory.LoadClass(damageTypeArray.GetText(i)));
+                _.memory.LoadClassS(damageTypeArray.GetString(i)));
         }
     }
+    _.memory.Free(damageTypeArray);
     neverScale.length = 0;
-    damageTypeArray = source.GetDynamicArray(P("neverScale"));
+    damageTypeArray = source.GetArrayList(P("neverScale"));
     if (damageTypeArray != none) {
         for (i = 0; i < damageTypeArray.GetLength(); i += 1)
         {
             neverScale[i] = class<DamageType>(
-                _.memory.LoadClass(damageTypeArray.GetText(i)));
+                _.memory.LoadClassS(damageTypeArray.GetString(i)));
         }
     }
+    _.memory.Free(damageTypeArray);
 }
 
 protected function DefaultIt()

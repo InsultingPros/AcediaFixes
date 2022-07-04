@@ -23,15 +23,15 @@ class FixDualiesCost extends FeatureConfig
 
 var public config bool allowSellValueIncrease;
 
-protected function AssociativeArray ToData()
+protected function HashTable ToData()
 {
-    local AssociativeArray data;
-    data = __().collections.EmptyAssociativeArray();
-    data.SetBool(P("allowSellValueIncrease"), allowSellValueIncrease, true);
+    local HashTable data;
+    data = __().collections.EmptyHashTable();
+    data.SetBool(P("allowSellValueIncrease"), allowSellValueIncrease);
     return data;
 }
 
-protected function FromData(AssociativeArray source)
+protected function FromData(HashTable source)
 {
     if (source != none)
     {

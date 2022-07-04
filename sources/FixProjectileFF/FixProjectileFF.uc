@@ -1,6 +1,6 @@
 /**
  *      Config object for `FixProjectileFF_Feature`.
- *      Copyright 2021 Anton Tarasenko
+ *      Copyright 2021-2022 Anton Tarasenko
  *------------------------------------------------------------------------------
  * This file is part of Acedia.
  *
@@ -23,15 +23,15 @@ class FixProjectileFF extends FeatureConfig
 
 var public config bool ignoreFriendlyFire;
 
-protected function AssociativeArray ToData()
+protected function HashTable ToData()
 {
-    local AssociativeArray data;
-    data = __().collections.EmptyAssociativeArray();
-    data.SetBool(P("ignoreFriendlyFire"), ignoreFriendlyFire, true);
+    local HashTable data;
+    data = __().collections.EmptyHashTable();
+    data.SetBool(P("ignoreFriendlyFire"), ignoreFriendlyFire);
     return data;
 }
 
-protected function FromData(AssociativeArray source)
+protected function FromData(HashTable source)
 {
     if (source != none) {
         ignoreFriendlyFire = source.GetBool(P("ignoreFriendlyFire"));
