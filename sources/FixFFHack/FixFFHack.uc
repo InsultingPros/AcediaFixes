@@ -61,7 +61,7 @@ protected function FromData(HashTable source)
         for (i = 0; i < damageTypeArray.GetLength(); i += 1)
         {
             alwaysScale[i] = class<DamageType>(
-                _.memory.LoadClassS(damageTypeArray.GetString(i)));
+                _.memory.LoadClass_S(damageTypeArray.GetString(i)));
         }
     }
     _.memory.Free(damageTypeArray);
@@ -71,7 +71,7 @@ protected function FromData(HashTable source)
         for (i = 0; i < damageTypeArray.GetLength(); i += 1)
         {
             neverScale[i] = class<DamageType>(
-                _.memory.LoadClassS(damageTypeArray.GetString(i)));
+                _.memory.LoadClass_S(damageTypeArray.GetString(i)));
         }
     }
     _.memory.Free(damageTypeArray);
