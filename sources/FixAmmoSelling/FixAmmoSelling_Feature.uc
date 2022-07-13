@@ -209,7 +209,7 @@ public final function FixWeapon(KFWeapon potentialAbuser)
 {
     local int                   i;
     local WeaponRecord          newRecord;
-    local array<WeaponRecord>   registeredWeapons; 
+    local array<WeaponRecord>   registeredWeapons;
     local FixAmmoSellingService service;
     if (potentialAbuser == none) return;
 
