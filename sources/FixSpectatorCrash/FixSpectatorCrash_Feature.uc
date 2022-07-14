@@ -102,14 +102,14 @@ var private const int becomeSpectatorID;
 
 protected function OnEnabled()
 {
-    _.unreal.OnTick(self).connect = Tick;
-    _.unreal.broadcasts.OnHandleLocalized(self).connect = HandleLocalized;
+    _server.unreal.OnTick(self).connect = Tick;
+    _server.unreal.broadcasts.OnHandleLocalized(self).connect = HandleLocalized;
 }
 
 protected function OnDisabled()
 {
-    _.unreal.OnTick(self).Disconnect();
-    _.unreal.broadcasts.OnHandleLocalized(self).Disconnect();
+    _server.unreal.OnTick(self).Disconnect();
+    _server.unreal.broadcasts.OnHandleLocalized(self).Disconnect();
 }
 
 protected function SwapConfig(FeatureConfig config)
@@ -207,7 +207,7 @@ public final function NotifyStatusChange(PlayerController player)
     //  or didn't recently change their status (put them on cooldown).
     else if (!IsViolator(player))
     {
-        newRecord.player    = _.unreal.ActorRef(player);
+        newRecord.player    = _server.unreal.ActorRef(player);
         newRecord.cooldown  = spectatorChangeTimeout;
         currentCooldowns[currentCooldowns.length] = newRecord;
     }
@@ -223,7 +223,7 @@ private final function SetBlock(bool activateBlock)
     if (activateBlock == becomingActiveBlocked) return;
 
     //  Actually block/unblock
-    kfGameType = _.unreal.GetKFGameType();
+    kfGameType = _server.unreal.GetKFGameType();
     becomingActiveBlocked = activateBlock;
     if (activateBlock)
     {
@@ -296,7 +296,7 @@ private final function int GetRealPlayers()
 //  (difference will be equal to the amount of faked players).
 private final function int GetNumPlayersMod()
 {
-    return _.unreal.GetKFGameType().numPlayers - GetRealPlayers();
+    return _server.unreal.GetKFGameType().numPlayers - GetRealPlayers();
 }
 
 private final function ReduceCooldowns(float timePassed)

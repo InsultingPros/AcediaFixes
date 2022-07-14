@@ -100,14 +100,14 @@ protected function OnEnabled()
 {
     local LevelInfo     level;
     local CashPickup    nextCash;
-    checkTimer = _.time.StartRealTimer(checkInterval, true);
+    checkTimer = _server.time.StartRealTimer(checkInterval, true);
     checkTimer.OnElapsed(self).connect = Tick;
-    _.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
-    level = _.unreal.GetLevel();
+    _server.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
+    level = _server.unreal.GetLevel();
     //      Find all wads of cash laying around on the map,
     //  so that we could accordingly limit the cash spam.
     foreach level.DynamicActors(class'KFMod.CashPickup', nextCash) {
-        wads[wads.length] = _.unreal.ActorRef(nextCash);
+        wads[wads.length] = _server.unreal.ActorRef(nextCash);
     }
 }
 
@@ -120,7 +120,7 @@ protected function OnDisabled()
     }
     wads.length                 = 0;
     currentContributors.length  = 0;
-    _.unreal.mutator.OnCheckReplacement(self).Disconnect();
+    _server.unreal.mutator.OnCheckReplacement(self).Disconnect();
     checkTimer.FreeSelf();
 }
 
@@ -220,7 +220,7 @@ public final function AddContribution(PlayerController player, CashPickup cash)
 {
     local int                   playerIndex;
     local DoshStreamPerPlayer   newStreamRecord;
-    wads[wads.length] = _.unreal.ActorRef(cash);
+    wads[wads.length] = _server.unreal.ActorRef(cash);
     //  Add contribution to player
     playerIndex = GetContributorIndex(player);
     if (playerIndex >= 0)
@@ -228,7 +228,7 @@ public final function AddContribution(PlayerController player, CashPickup cash)
         currentContributors[playerIndex].contribution += 1.0;
         return;
     }
-    newStreamRecord.player          = _.unreal.ActorRef(player);
+    newStreamRecord.player          = _server.unreal.ActorRef(player);
     newStreamRecord.contribution    = 1.0;
     currentContributors[currentContributors.length] = newStreamRecord;
 }

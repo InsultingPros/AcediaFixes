@@ -87,20 +87,22 @@ protected function Constructor()
     }
     //  To detect when player tries to pick something up
     //  (and force additional pickup fix update)
-    _.unreal.gameRules.OnOverridePickupQuery(self).connect = PickupQuery;
+    _server.unreal.gameRules.OnOverridePickupQuery(self).connect = PickupQuery;
     //  To detect newly spawned pickups
-    _.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
+    _server.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
     //  For updating pickups as soon as possible
-    _.unreal.OnTick(self).connect = Tick;
+    _server.unreal.OnTick(self).connect = Tick;
     //      Find all `KFWeaponPickup`s laying around on the map,
     //  so that we can fix preexisting ones too.
     //      But add them to pending list in a freaky case this `HealperPickup`
     //  was created during one's initialization. This will give it time to
     //  set up variables that distinguish dropped pickup from another
     //  kind of pickup.
-    level = _.unreal.GetLevel();
-    foreach level.DynamicActors(class'KFMod.KFWeaponPickup', nextPickup) {
-        pendingPickups[pendingPickups.length] = _.unreal.ActorRef(nextPickup);
+    level = _server.unreal.GetLevel();
+    foreach level.DynamicActors(class'KFMod.KFWeaponPickup', nextPickup)
+    {
+        pendingPickups[pendingPickups.length] =
+            _server.unreal.ActorRef(nextPickup);
     }
 }
 
@@ -119,9 +121,9 @@ protected function Finalizer()
     _.memory.FreeMany(pendingPickups);
     recordedPickups.length = 0;
     pendingPickups.length = 0;
-    _.unreal.gameRules.OnOverridePickupQuery(self).Disconnect();
-    _.unreal.mutator.OnCheckReplacement(self).Disconnect();
-    _.unreal.OnTick(self).Disconnect();
+    _server.unreal.gameRules.OnOverridePickupQuery(self).Disconnect();
+    _server.unreal.mutator.OnCheckReplacement(self).Disconnect();
+    _server.unreal.OnTick(self).Disconnect();
 }
 
 function bool PickupQuery(
@@ -209,10 +211,13 @@ public final function HandlePickup(KFWeaponPickup newPickup)
     if (newPickup.instigator != none)
     {
         newPickup.Disable('Destroyed');
-        recordedPickups[recordedPickups.length] = _.unreal.ActorRef(newPickup);
+        recordedPickups[recordedPickups.length] =
+            _server.unreal.ActorRef(newPickup);
     }
-    else {
-        pendingPickups[pendingPickups.length] = _.unreal.ActorRef(newPickup);
+    else
+    {
+        pendingPickups[pendingPickups.length] =
+            _server.unreal.ActorRef(newPickup);
     }
 }
 

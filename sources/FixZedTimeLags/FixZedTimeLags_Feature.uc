@@ -66,17 +66,17 @@ var private float updateCooldown;
 protected function OnEnabled()
 {
     if (disableTick) {
-        _.unreal.GetGameType().Disable('Tick');
+        _server.unreal.GetGameType().Disable('Tick');
     }
-    _.unreal.OnTick(self).connect = Tick;
+    _server.unreal.OnTick(self).connect = Tick;
 }
 
 protected function OnDisabled()
 {
     if (disableTick) {
-        _.unreal.GetGameType().Enable('Tick');
+        _server.unreal.GetGameType().Enable('Tick');
     }
-    _.unreal.OnTick(self).Disconnect();
+    _server.unreal.OnTick(self).Disconnect();
 }
 
 protected function SwapConfig(FeatureConfig config)
@@ -94,7 +94,7 @@ private function Tick(float delta, float timeDilationCoefficient)
 {
     local KFGameType    gameType;
     local float         trueTimePassed;
-    gameType = _.unreal.GetKFGameType();
+    gameType = _server.unreal.GetKFGameType();
     if (!gameType.bZEDTimeActive)   return;
     //      Unfortunately we need to keep disabling `Tick()` probe function,
     //  because it constantly gets enabled back and I don't know where

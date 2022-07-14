@@ -59,12 +59,12 @@ var private /*config*/ array< class<DamageType> >   neverScale;
 
 protected function OnEnabled()
 {
-    _.unreal.gameRules.OnNetDamage(self).connect = NetDamage;
+    _server.unreal.gameRules.OnNetDamage(self).connect = NetDamage;
 }
 
 protected function OnDisabled()
 {
-    _.unreal.gameRules.OnNetDamage(self).Disconnect();
+    _server.unreal.gameRules.OnNetDamage(self).Disconnect();
 }
 
 protected function SwapConfig(FeatureConfig config)
@@ -99,7 +99,7 @@ function int NetDamage(
         {
             //  Remove pushback to avoid environmental kills
             momentum = Vect(0.0, 0.0, 0.0);
-            damage *= _.unreal.GetKFGameType().friendlyFireScale;
+            damage *= _server.unreal.GetKFGameType().friendlyFireScale;
         }
     }
     return damage;

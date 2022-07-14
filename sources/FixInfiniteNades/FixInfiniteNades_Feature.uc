@@ -67,9 +67,9 @@ protected function OnEnabled()
 {
     local Frag      nextFrag;
     local LevelInfo level;
-    level = _.unreal.GetLevel();
-    _.unreal.OnTick(self).connect = Tick;
-    _.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
+    level = _server.unreal.GetLevel();
+    _server.unreal.OnTick(self).connect = Tick;
+    _server.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
     shuttingDown = false;
     //  Find all frags, that spawned when this fix wasn't running.
     foreach level.DynamicActors(class'KFMod.Frag', nextFrag) {
@@ -80,8 +80,8 @@ protected function OnEnabled()
 
 protected function OnDisabled()
 {
-    _.unreal.OnTick(self).Disconnect();
-    _.unreal.mutator.OnCheckReplacement(self).Disconnect();
+    _server.unreal.OnTick(self).Disconnect();
+    _server.unreal.mutator.OnCheckReplacement(self).Disconnect();
     shuttingDown = true;
     RecreateFrags();
     ammoRecords.length = 0;
@@ -198,7 +198,7 @@ public final function RegisterFrag(Frag newFrag)
     index = GetAmmoIndex(newFrag);
     if (index >= 0) return;
 
-    newRecord.fragReference = _.unreal.ActorRef(newFrag);
+    newRecord.fragReference = _server.unreal.ActorRef(newFrag);
     newRecord.amount = GetFragAmmo(newFrag);
     ammoRecords[ammoRecords.length] = newRecord;
 }

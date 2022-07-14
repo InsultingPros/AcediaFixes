@@ -53,7 +53,7 @@ protected function OnEnabled()
     if (actualInterval <= 0) {
         actualInterval = 0.25;
     }
-    checkTimer = _.time.StartTimer(actualInterval, true);
+    checkTimer = _server.time.StartTimer(actualInterval, true);
     checkTimer.OnElapsed(self).connect = Timer;
 }
 

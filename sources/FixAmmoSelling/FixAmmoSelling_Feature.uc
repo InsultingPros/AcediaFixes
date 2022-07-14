@@ -135,8 +135,8 @@ protected function OnEnabled()
     local LevelInfo     level;
     local KFWeapon      nextWeapon;
     local KFAmmoPickup  nextPickup;
-    level = _.unreal.GetLevel();
-    _.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
+    level = _server.unreal.GetLevel();
+    _server.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
     //  Find all abusable weapons
     foreach level.DynamicActors(class'KFMod.KFWeapon', nextWeapon) {
         FixWeapon(nextWeapon);
@@ -154,8 +154,8 @@ protected function OnDisabled()
     local AmmoPickupStalker         nextStalker;
     local array<AmmoPickupStalker>  stalkers;
     local array<WeaponRecord>       registeredWeapons;
-    level = _.unreal.GetLevel();
-    _.unreal.mutator.OnCheckReplacement(self).Disconnect();
+    level = _server.unreal.GetLevel();
+    _server.unreal.mutator.OnCheckReplacement(self).Disconnect();
     registeredWeapons = FixAmmoSellingService(GetService()).registeredWeapons;
     //  Restore all the `pickupClass` variables we've changed.
     for (i = 0; i < registeredWeapons.length; i += 1)

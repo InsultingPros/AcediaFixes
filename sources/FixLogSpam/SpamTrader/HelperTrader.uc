@@ -63,7 +63,7 @@ protected function Constructor()
     local LevelInfo     level;
     local ShopVolume    nextShop;
     local WeaponLocker  replacementLocker;
-    level = _.unreal.GetLevel();
+    level = _server.unreal.GetLevel();
     //  Get locker
     replacementLocker = SpawnDummyWeaponLocker();
     if (replacementLocker == none) {
@@ -81,7 +81,7 @@ protected function Constructor()
         if (nextShop == none)           continue;
         if (nextShop.myTrader != none)  continue;
         nextShop.myTrader = replacementLocker;
-        fixedShops[fixedShops.length] = _.unreal.ActorRef(nextShop);
+        fixedShops[fixedShops.length] = _server.unreal.ActorRef(nextShop);
     }
 }
 
@@ -133,7 +133,7 @@ private final function WeaponLocker SpawnDummyWeaponLocker()
         lockerInstance.SetDrawType(DT_None);
         lockerInstance.SetCollision(false);
     }
-    dummyLocker = _.unreal.ActorRef(lockerInstance);
+    dummyLocker = _server.unreal.ActorRef(lockerInstance);
     return lockerInstance;
 }
 
@@ -141,7 +141,7 @@ private final function WeaponLocker FindExistingWeaponLocker()
 {
     local LevelInfo     level;
     local WeaponLocker  nextLocker;
-    level = _.unreal.GetLevel();
+    level = _server.unreal.GetLevel();
     foreach level.DynamicActors(class'KFMod.WeaponLocker', nextLocker)
     {
         if (nextLocker != none) {

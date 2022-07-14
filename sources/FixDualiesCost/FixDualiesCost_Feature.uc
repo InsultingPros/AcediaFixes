@@ -153,10 +153,10 @@ protected function OnEnabled()
 {
     local LevelInfo level;
     local KFWeapon  nextWeapon;
-    _.unreal.OnTick(self).connect = Tick;
-    _.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
-    _.unreal.gameRules.OnOverridePickupQuery(self).connect = PickupQuery;
-    level = _.unreal.GetLevel();
+    _server.unreal.OnTick(self).connect = Tick;
+    _server.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
+    _server.unreal.gameRules.OnOverridePickupQuery(self).connect = PickupQuery;
+    level = _server.unreal.GetLevel();
     //  Find all weapons, that spawned when this fix wasn't running.
     foreach level.DynamicActors(class'KFMod.KFWeapon', nextWeapon) {
         RegisterSinglePistol(nextWeapon, false);
@@ -166,9 +166,9 @@ protected function OnEnabled()
 protected function OnDisabled()
 {
     local int i;
-    _.unreal.OnTick(self).Disconnect();
-    _.unreal.mutator.OnCheckReplacement(self).Disconnect();
-    _.unreal.gameRules.OnOverridePickupQuery(self).Disconnect();
+    _server.unreal.OnTick(self).Disconnect();
+    _server.unreal.mutator.OnCheckReplacement(self).Disconnect();
+    _server.unreal.gameRules.OnOverridePickupQuery(self).Disconnect();
     for (i = 0; i < storedValues.length; i += 1)
     {
         storedValues[i].reference.FreeSelf();
@@ -302,9 +302,9 @@ public final function RegisterSinglePistol(
     if (singlePistol == none)               return;
     if (GetIndexAs(singlePistol, true) < 0) return;
 
-    newRecord.reference = _.unreal.ActorRef(singlePistol);
+    newRecord.reference = _server.unreal.ActorRef(singlePistol);
     newRecord.class     = singlePistol.class;
-    newRecord.owner     = _.unreal.ActorRef(singlePistol.instigator);
+    newRecord.owner     = _server.unreal.ActorRef(singlePistol.instigator);
     if (justSpawned) {
         newRecord.value = nextSellValue;
     }
@@ -362,7 +362,7 @@ public final function FixCostAfterBuying(KFWeapon dualPistols)
     //      `dualPistols` will be the new pair of pistols, but it's value will
     //  get overwritten by vanilla's code after this function.
     //  So we must add it to pending values to be changed later.
-    newPendingValue.weapon = _.unreal.ActorRef(dualPistols);
+    newPendingValue.weapon = _server.unreal.ActorRef(dualPistols);
     if (dualPistols.class == class'KFMod.Dualies')
     {
         //  9mm is an exception.
@@ -417,7 +417,7 @@ public final function FixCostAfterPickUp(KFWeapon dualPistols)
         if (storedValues[i].class != dualiesClasses[index].single)  continue;
         if (storedValues[i].owner.Get() != dualPistols.instigator)  continue;
 
-        newPendingValue.weapon  = _.unreal.ActorRef(dualPistols);
+        newPendingValue.weapon  = _server.unreal.ActorRef(dualPistols);
         newPendingValue.value   = storedValues[i].value + nextSellValue;
         pendingValues[pendingValues.length] = newPendingValue;
         break;

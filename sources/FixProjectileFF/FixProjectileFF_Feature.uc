@@ -97,7 +97,7 @@ protected function OnEnabled()
         rules[i].relevancyFlag = rules[i].vulnerableClass.default.bGameRelevant;
         rules[i].vulnerableClass.default.bGameRelevant = false;
     }
-    _.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
+    _server.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
 }
 
 protected function OnDisabled()
@@ -109,7 +109,7 @@ protected function OnDisabled()
         if (rules[i].protectedClass == none)    continue;
         rules[i].vulnerableClass.default.bGameRelevant = rules[i].relevancyFlag;
     }
-    _.unreal.mutator.OnCheckReplacement(self).Disconnect();
+    _server.unreal.mutator.OnCheckReplacement(self).Disconnect();
 }
 
 protected function SwapConfig(FeatureConfig config)
@@ -291,7 +291,7 @@ public static final function bool IsFriendlyFireAcceptable()
     if (default.ignoreFriendlyFire) {
         return false;
     }
-    return __().unreal.GetKFGameType().friendlyFireScale > 0;
+    return __server().unreal.GetKFGameType().friendlyFireScale > 0;
 }
 
 defaultproperties

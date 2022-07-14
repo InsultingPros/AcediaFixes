@@ -130,13 +130,13 @@ protected function OnEnabled()
     local PipeBombProjectile    nextPipe;
     pipesRelevancyFlag = class'PipeBombProjectile'.default.bAlwaysRelevant;
     class'PipeBombProjectile'.default.bGameRelevant = false;
-    _.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
+    _server.unreal.mutator.OnCheckReplacement(self).connect = CheckReplacement;
     //  Set cleanup timer, there is little point to making
     //  clean up interval configurable.
-    cleanupTimer = _.time.StartTimer(5.0, true);
+    cleanupTimer = _server.time.StartTimer(5.0, true);
     cleanupTimer.OnElapsed(self).connect = CleanPipeRecords;
     //  Fix pipes that are already lying about on the map
-    level = _.unreal.GetLevel();
+    level = _server.unreal.GetLevel();
     foreach level.DynamicActors(class'KFMod.PipeBombProjectile', nextPipe) {
         RegisterPipe(nextPipe);
     }
@@ -146,7 +146,7 @@ protected function OnDisabled()
 {
     local int i;
     class'PipeBombProjectile'.default.bGameRelevant = pipesRelevancyFlag;
-    _.unreal.mutator.OnCheckReplacement(self).Disconnect();
+    _server.unreal.mutator.OnCheckReplacement(self).Disconnect();
     cleanupTimer.FreeSelf();
     for (i = 0; i < pipeRecords.length; i += 1) {
         ReleasePipe(pipeRecords[i]);
@@ -200,12 +200,12 @@ public final function RegisterPipe(PipeBombProjectile newPipe)
             return;
         }
     }
-    newRecord.pipe = _.unreal.ActorRef(newPipe);
+    newRecord.pipe = _server.unreal.ActorRef(newPipe);
     //  Setup `PipesSafetyCollision` for catching `TakeDamage()` events
     //  (only if we need to according to settings)
     if (NeedSafetyCollision())
     {
-        newRecord.safetyCollision = _.unreal.ActorRef(
+        newRecord.safetyCollision = _server.unreal.ActorRef(
             class'PipesSafetyCollision'.static.ProtectPipes(newPipe));
     }
     pipeRecords[pipeRecords.length] = newRecord;
