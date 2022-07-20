@@ -94,7 +94,7 @@ var private array<NativeActorRef> wads;
 
 //  Generates "reset" events when `wads` array is getting cleaned from
 //  destroyed/picked up dosh and players' contributions are reduced.
-var private RealTimer checkTimer;
+var private Timer checkTimer;
 
 protected function OnEnabled()
 {
