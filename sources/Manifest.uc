@@ -31,6 +31,6 @@ defaultproperties
     features(6)     = class'FixDualiesCost_Feature'
     features(7)     = class'FixInventoryAbuse_Feature'
     features(8)     = class'FixProjectileFF_Feature'
-    features(9)     = class'FixPipes_Feature'
-    features(10)    = class'FixLogSpam_Feature'
+    features(9)     = class'FixLogSpam_Feature'
+    //features(9)     = class'FixPipes_Feature'
 }
