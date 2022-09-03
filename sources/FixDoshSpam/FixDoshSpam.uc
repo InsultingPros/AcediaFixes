@@ -21,10 +21,10 @@ class FixDoshSpam extends FeatureConfig
     perobjectconfig
     config(AcediaFixes);
 
-var public /*config*/ float doshPerSecondLimitMax;
-var public /*config*/ float doshPerSecondLimitMin;
-var public /*config*/ int   criticalDoshAmount;
-var public /*config*/ float checkInterval;
+var public config float doshPerSecondLimitMax;
+var public config float doshPerSecondLimitMin;
+var public config int   criticalDoshAmount;
+var public config float checkInterval;
 
 protected function HashTable ToData()
 {
